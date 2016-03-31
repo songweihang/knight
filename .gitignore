@@ -39,3 +39,16 @@ luac.out
 *.x86_64
 *.hex
 
+client_body_temp
+proxy_temp
+uwsgi_temp
+fastcgi_temp
+scgi_temp
+*.swp
+*.swo
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+access.log
+error.log
+nginx.pid
