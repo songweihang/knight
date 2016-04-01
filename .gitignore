@@ -51,4 +51,5 @@ scgi_temp
 *.sublime-workspace
 access.log
 error.log
-nginx.pid
+*.pid
+*.sh

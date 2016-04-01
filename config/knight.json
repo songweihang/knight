@@ -1,0 +1,11 @@
+{
+	"redis":{
+		"uds":"\/tmp\/redis.sock",
+		"host":"127.0.0.1",
+		"port":6379,
+		"poolsize":1000,
+		"idletime":90000,
+		"timeout":10000,
+		"dbid":0
+	}
+}
