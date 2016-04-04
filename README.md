@@ -1,2 +1,2 @@
 # knight
-Http Gateway
+Nginx Http Gateway  
