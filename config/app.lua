@@ -14,9 +14,11 @@ local function jdecode(str)
 end
 
 local path = "/Users/apple/Jakin/knight/config/knight.json"
+local appsConfig = ngx.shared.appsConfig
+
 
 --load knight.json
-function _M.load_json_config()
+function _M.setAppsConfig()
 
 	local file = io.open(path, "r")
 
@@ -26,7 +28,17 @@ function _M.load_json_config()
 
     local knightJson = file:read("*all");
     file:close();
-	return jdecode(knightJson)
+    
+    if knightJson ~= nil then
+        appsConfig:set('appsConfig',knightJson)       
+    end
+	
+    return jdecode(knightJson)
+end
+
+-- get knight.json
+function _M.getAppsConfig()
+    return jdecode(appsConfig:get('appsConfig'))
 end
 
 return _M
