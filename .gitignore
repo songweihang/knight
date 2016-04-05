@@ -53,3 +53,4 @@ access.log
 error.log
 *.pid
 *.sh
+*.rdb
