@@ -1,2 +1,1 @@
-local statusCache = ngx.shared.status
-statusCache:set('status',ngx.var.status)
+local stats = require "apps.lib.stats".run()

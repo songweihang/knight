@@ -1,11 +1,16 @@
 {
-	"redis":{
-		"uds":"\/tmp\/redis.sock",
-		"host":"127.0.0.1",
-		"port":6379,
-		"poolsize":1000,
-		"idletime":90000,
-		"timeout":10000,
-		"dbid":0
-	}
+    "http_stats_all": true,
+    "http_stats_matcher": {
+        "fw_api": ""
+    },
+    "http_limit_matcher": {
+        "fw_api": {
+            "matcher": "",
+            "limit": 100
+        }
+    },
+
+    "http_reverse_matcher": [],
+    "ABTestingGateway": false,
+    "http_waf": false
 }

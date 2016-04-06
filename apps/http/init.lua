@@ -1,0 +1,1 @@
+local stats = require "apps.lib.stats".init()

@@ -28,13 +28,10 @@ function _M.setAppsConfig()
     local knightJson, err = red:get("knight:appsConfig")
 
     if knightJson == nil then
-
         local file = io.open(path, "r")
-
         if file == nil then
             return nil
         end
-
         knightJson = file:read("*all");
         file:close();
     end
