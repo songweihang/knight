@@ -1,9 +1,13 @@
 local require                   = require
 local redis_c                   = require "resty.redis"
-local max_idle_timeout          = ngx.var.redis_keepalive_timeout
-local poolsize					= ngx.var.redis_pool_size
-local host						= ngx.var.redis_host
-local port						= ngx.var.redis_port
+local systemConf                = require "config.init"
+local redisConf                 = systemConf.redisConf
+
+local max_idle_timeout          = redisConf.idletime
+local poolsize					= redisConf.poolsize
+local host						= redisConf.host
+local port						= redisConf.port
+
 local ok, new_tab = pcall(require, "table.new")
 if not ok or type(new_tab) ~= "function" then
     new_tab = function (narr, nrec) return {} end

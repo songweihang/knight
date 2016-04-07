@@ -1,8 +1,12 @@
-local modulename = "configApp"
+local modulename = "configKnight"
 local _M = {}
 
 _M._VERSION = '0.1'
 
+local systemConf = require "config.init"
+local path = systemConf.knightJsonPath
+
+local appsConfigCache = ngx.shared.appsConfig
 local redis = require "apps.lib.redis"
 local resty_lock = require "resty.lock"
 --local json = require "json"
@@ -11,33 +15,46 @@ local cjson= require('cjson.safe')
 -- 编码
 local jencode   = cjson.encode
 
--- 解码
+--[[
+    json decode
+    @param string str
+    @return table
+]]--
 local function jdecode(str)
     local data = nil
     _, err = pcall(function(str) return cjson.decode(str) end, str)
     return data, err
 end
 
-local path = "/Users/apple/Jakin/knight/config/knight.json"
-local appsConfigCache = ngx.shared.appsConfig
+--[[
+    Read file and bufferize content
+    @param string file
+    @return string
+]]--
+local function readAll(file)
+    local f = io.open(file, "rb")
+    local content = ""
+    if f then
+         content = f:read("*all")
+        f:close()
+    end
+    return content
+end
 
---load knight.json
-function _M.setAppsConfig()
+--[[
+    load knight.json
+    @return string
+]]--
+local function writeConfig()
 
     local red = redis:new()
-    local knightJson, err = red:get("knight:appsConfig")
+    -- local knightJson, err = red:get("knight:appsConfig")
 
     if knightJson == nil then
-        local file = io.open(path, "r")
-        if file == nil then
-            return nil
-        end
-        knightJson = file:read("*all");
-        file:close();
+        knightJson = readAll(path)
     end
     
     if knightJson ~= nil then
-
         local err, knightConfig = jdecode(knightJson)
         appsConfigCache:set('appsConfig',knightJson,5)
         red:set("knight:appsConfig",knightJson)
@@ -48,7 +65,7 @@ function _M.setAppsConfig()
 end
 
 -- get knight.json
-function _M.getAppsConfig()
+_M.run = function()
     
     local knightJson,err = appsConfigCache:get('appsConfig')
     if err then
@@ -80,7 +97,7 @@ function _M.getAppsConfig()
         return knightConfig
     end
 
-    local knightConfig = _M.setAppsConfig()
+    local knightConfig = writeConfig()
 
     local ok, err = lock:unlock()
     if not ok then

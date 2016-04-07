@@ -4,24 +4,33 @@ local _M = {}
 
 _M._VERSION = '0.1'
 
-local statsCache = ngx.shared.stats
+local systemConf 				= require "config.init"
+local statsConf 				= systemConf.statsConf
 
-local HTTP_ACCES_TOTAL = 'a:total'
-local HTTP_ACCES_FAIL  = 'a:fail' 
+local statsCache       			= ngx.shared.stats
+local ngxmatch         			= ngx.re.match
+local match 		   			= string.match
 
 _M.init = function ()
 	--Initial stats
-	statsCache:add(HTTP_ACCES_TOTAL,0)
-	statsCache:add(HTTP_ACCES_FAIL,0)
-	return 1
+	statsCache:add(statsConf.http_total,0)
+	statsCache:add(statsConf.http_fail,0)
+	statsCache:add(statsConf.http_success_time,0)
+	statsCache:add(statsConf.http_fail_time,0)
 end
 
 _M.run = function()
-	statsCache:incr(HTTP_ACCES_TOTAL,1)
-	if tonumber(ngx.var.status) >= 400 then
+	statsCache:incr(statsConf.http_total,1)
+	-- ngx.HTTP_INTERNAL_SERVER_ERROR
+	if tonumber(ngx.var.status) >= ngx.HTTP_BAD_REQUEST then
 		-- HTTP FAIL 
-		statsCache:incr(HTTP_ACCES_FAIL,1)
+		statsCache:incr(statsConf.http_fail,1)
+		statsCache:incr(statsConf.http_fail_time,ngx.var.request_time)
+	else
+		statsCache:incr(statsConf.http_success_time,ngx.var.request_time)
 	end
 end
+
+
 
 return _M

@@ -1,7 +1,7 @@
 {
     "http_stats_all": true,
     "http_stats_matcher": {
-        "fw_api": ""
+        "fw_api": "[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}"
     },
     "http_limit_matcher": {
         "fw_api": {
@@ -9,7 +9,6 @@
             "limit": 100
         }
     },
-
     "http_reverse_matcher": [],
     "ABTestingGateway": false,
     "http_waf": false
