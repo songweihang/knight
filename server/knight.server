@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ x$1 != x ]; then
+	if [ "$1" == 'start' ]; then  
+		/usr/local/openresty/nginx/sbin/nginx -p `pwd` -c conf/nginx.conf
+	else
+		/usr/local/openresty/nginx/sbin/nginx -s $1  -p `pwd` -c conf/nginx.conf
+	fi
+	echo $1' knight.server';
+else
+    echo 'Usage: knight.server  {start|stop|restart|reload}  [ Knight server options ]'
+fi

@@ -52,5 +52,4 @@ scgi_temp
 access.log
 error.log
 *.pid
-*.sh
 *.rdb

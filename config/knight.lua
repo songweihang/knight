@@ -3,17 +3,18 @@ local _M = {}
 
 _M._VERSION = '0.1'
 
-local systemConf = require "config.init"
-local path = systemConf.knightJsonPath
+local systemConf        = require "config.init"
+local path              = systemConf.knightJsonPath
+local lockConf         = systemConf.lockConf
 
-local appsConfigCache = ngx.shared.appsConfig
-local redis = require "apps.lib.redis"
-local resty_lock = require "resty.lock"
+local knightConfCache   = ngx.shared.knightConf
+local redis             = require "apps.lib.redis"
+local resty_lock        = require "resty.lock"
 --local json = require "json"
-local cjson= require('cjson.safe')
+local cjson             = require('cjson.safe')
 
 -- 编码
-local jencode   = cjson.encode
+local jencode           = cjson.encode
 
 --[[
     json decode
@@ -56,7 +57,7 @@ local function writeConfig()
     
     if knightJson ~= nil then
         local err, knightConfig = jdecode(knightJson)
-        appsConfigCache:set('appsConfig',knightJson,5)
+        knightConfCache:set('appsConfig',knightJson,5)
         red:set("knight:appsConfig",knightJson)
         return knightConfig
     end
@@ -67,7 +68,7 @@ end
 -- get knight.json
 _M.run = function()
     
-    local knightJson,err = appsConfigCache:get('appsConfig')
+    local knightJson,err = knightConfCache:get('appsConfig')
     if err then
         return nil,"failed to get key from shm: " .. err
     end   
@@ -78,12 +79,12 @@ _M.run = function()
     end
 
     -- cacahe lock
-    local lock = resty_lock:new("ConfigLocks")
-    local elapsed, err = lock:lock("ConfigLocks")
+    local lock = resty_lock:new("knightConfLock",lockConf)
+    local elapsed, err = lock:lock("knightConfLock")
     if not elapsed then
         return nil,"failed to acquire the lock: " .. err
     end
-    local knightJson,err = appsConfigCache:get('appsConfig')
+    local knightJson,err = knightConfCache:get('appsConfig')
     if err then
         return nil,"failed to get key from shm: " .. err
     end 
