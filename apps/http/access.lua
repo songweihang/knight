@@ -9,7 +9,7 @@ local T = statsCache:get(statsConf.http_success_time)
 --ngx.say(type(statsConf))
 
 --ngx.say(ngx.var.request_body)
---ngx.say(T)
+ngx.say(T)
 
 local uri = ngx.var.uri
 if uri == nil then
@@ -18,8 +18,8 @@ end
 
 local stats = require "apps.lib.stats"
 local conf = stats.initStatsAll(statsConf,uri)
---ngx.say(conf.http_total)
---ngx.say(statsAllCache:get(conf.http_total))
+ngx.say(conf.http_total)
+ngx.say(statsAllCache:get(conf.http_success_time))
 
 local ngxmatch         = ngx.re.match
 local match 		   = string.match

@@ -3,7 +3,7 @@ local _M = {}
 
 _M._VERSION = '0.1'
 
-_M.knightJsonPath =  '/Users/apple/Jakin/knight/config/knight.json'
+_M.knightJsonPath =  '../config/knight.json'
 
 _M.redisConf = {
     ["uds"]      = '/tmp/redis.sock',

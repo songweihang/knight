@@ -8,7 +8,7 @@ local path              = systemConf.knightJsonPath
 local lockConf          = systemConf.lockConf
 
 local lrucache          = require "resty.lrucache"
-local knightConfCache   = lrucache.new(200)
+local knightConfCache   = lrucache.new(10)
 --local knightConfCache   = ngx.shared.knightConf
 local redis             = require "apps.lib.redis"
 local resty_lock        = require "resty.lock"
@@ -59,7 +59,7 @@ local function writeConfig()
 
     if knightJson ~= nil then
         local err, knightConfig = jdecode(knightJson)
-        knightConfCache:set('appsConfig',knightConfig,60)
+        knightConfCache:set('appsConfig',knightConfig,120)
         red:set("knight:appsConfig",knightJson)
         return knightConfig
     end

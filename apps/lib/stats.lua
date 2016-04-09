@@ -12,35 +12,58 @@ local statsAllCache       		= ngx.shared.statsAll
 local ngxmatch         			= ngx.re.match
 local match 		   			= string.match
 
-_M.init = function ()
-	--Initial stats
-	statsCache:add(statsConf.http_total,0)
-	statsCache:add(statsConf.http_fail,0)
-	statsCache:add(statsConf.http_success_time,0)
-	statsCache:add(statsConf.http_fail_time,0)
-	statsCache:add(statsConf.http_success_upstream_time,0)
-	statsCache:add(statsConf.http_fail_upstream_time,0)
+--[[
+	初始化统计缓存
+	@param cache ngx_shared 
+    @param table conf
+    @return 
+]]--
+local function intStatsNumCache(cache,conf)
+
+	local ok, err = cache:add(conf.http_total,0)
+	if ok then
+		cache:add(conf.http_fail,0)
+		cache:add(conf.http_success_time,0)
+		cache:add(conf.http_fail_time,0)
+		cache:add(conf.http_success_upstream_time,0)
+		cache:add(conf.http_fail_upstream_time,0)
+	end
 end
 
-_M.run = function()
+--[[
+	统计计数器
+	@param cache ngx_shared 
+    @param table conf
+    @return 
+]]--
+local function incrStatsNumCache(cache,conf)
 
-	statsCache:incr(statsConf.http_total,1)
+	cache:incr(conf.http_total,1)
 	-- ngx.HTTP_INTERNAL_SERVER_ERROR
 	if tonumber(ngx.var.status) >= ngx.HTTP_BAD_REQUEST then
 		-- HTTP FAIL 
-		statsCache:incr(statsConf.http_fail,1)
-		statsCache:incr(statsConf.http_fail_time,ngx.var.request_time)
+		cache:incr(conf.http_fail,1)
+		cache:incr(conf.http_fail_time,ngx.var.request_time)
 		if ngx.var.upstream_response_time ~= nil then
-			statsCache:incr(statsConf.http_fail_upstream_time,ngx.var.upstream_response_time)
+			cache:incr(conf.http_fail_upstream_time,ngx.var.upstream_response_time)
 		end
 	else
-		statsCache:incr(statsConf.http_success_time,ngx.var.request_time)
+		cache:incr(conf.http_success_time,ngx.var.request_time)
 		if ngx.var.upstream_response_time ~= nil then
-			statsCache:incr(statsConf.http_success_upstream_time,ngx.var.upstream_response_time)
+			cache:incr(conf.http_success_upstream_time,ngx.var.upstream_response_time)
 		end
 	end
+end
 
-	_M.statsAll()
+_M.init = function ()
+	--Initial stats
+	intStatsNumCache(statsCache,statsConf)
+end
+
+_M.run = function()
+	-- http 请求总统计数据
+	incrStatsNumCache(statsCache,statsConf)
+	--_M.statsAll()
 end
 
 local function statsMatch()
@@ -53,24 +76,8 @@ function _M.statsAll()
 	if uri == nil then
 		return
 	end
-
 	local statsAllConf = _M.initStatsAll(statsConf,uri)
-
-	statsAllCache:incr(statsAllConf.http_total,1)
-	if tonumber(ngx.var.status) >= ngx.HTTP_BAD_REQUEST then
-		-- HTTP FAIL 
-		statsAllCache:incr(statsAllConf.http_fail,1)
-		statsAllCache:incr(statsAllConf.http_fail_time,ngx.var.request_time)
-		if ngx.var.upstream_response_time ~= nil then
-			statsAllCache:incr(statsAllConf.http_fail_upstream_time,ngx.var.upstream_response_time)
-		end
-	else
-		statsAllCache:incr(statsAllConf.http_success_time,ngx.var.request_time)
-		if ngx.var.upstream_response_time ~= nil then
-			statsAllCache:incr(statsAllConf.http_success_upstream_time,ngx.var.upstream_response_time)
-		end
-	end
-
+	incrStatsNumCache(statsAllCache,statsAllConf)
 end
 
 function _M.initStatsAll(statsConf,prefix)
@@ -86,14 +93,7 @@ function _M.initStatsAll(statsConf,prefix)
 	StatsAllConf.http_fail_upstream_time = statsConf.http_fail_upstream_time..prefix
 
 	-- 初始化统计值
-	local ok, err = statsAllCache:add(StatsAllConf.http_total,0)
-	if ok then
-		statsAllCache:add(StatsAllConf.http_fail,0)
-		statsAllCache:add(StatsAllConf.http_success_time,0)
-		statsAllCache:add(StatsAllConf.http_fail_time,0)
-		statsAllCache:add(StatsAllConf.http_success_upstream_time,0)
-		statsAllCache:add(StatsAllConf.http_fail_upstream_time,0)
-	end
+	intStatsNumCache(statsAllCache,StatsAllConf)
 
 	return StatsAllConf	
 end

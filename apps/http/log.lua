@@ -1,1 +1,3 @@
-local stats = require "apps.lib.stats".run()
+local stats = require "apps.lib.stats"
+stats.run()
+stats.statsAll()
