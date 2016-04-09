@@ -5,9 +5,11 @@ _M._VERSION = '0.1'
 
 local systemConf        = require "config.init"
 local path              = systemConf.knightJsonPath
-local lockConf         = systemConf.lockConf
+local lockConf          = systemConf.lockConf
 
-local knightConfCache   = ngx.shared.knightConf
+local lrucache          = require "resty.lrucache"
+local knightConfCache   = lrucache.new(200)
+--local knightConfCache   = ngx.shared.knightConf
 local redis             = require "apps.lib.redis"
 local resty_lock        = require "resty.lock"
 --local json = require "json"
@@ -49,15 +51,15 @@ end
 local function writeConfig()
 
     local red = redis:new()
-    -- local knightJson, err = red:get("knight:appsConfig")
+    local knightJson, err = red:get("knight:appsConfig")
 
     if knightJson == nil then
         knightJson = readAll(path)
     end
-    
+
     if knightJson ~= nil then
         local err, knightConfig = jdecode(knightJson)
-        knightConfCache:set('appsConfig',knightJson,5)
+        knightConfCache:set('appsConfig',knightConfig,60)
         red:set("knight:appsConfig",knightJson)
         return knightConfig
     end
@@ -67,34 +69,26 @@ end
 
 -- get knight.json
 _M.run = function()
-    
-    local knightJson,err = knightConfCache:get('appsConfig')
-    if err then
-        return nil,"failed to get key from shm: " .. err
-    end   
-
-    if knightJson then
-        local err, knightConfig = jdecode(knightJson)
+    local a,c = knightConfCache:get('appsConfig')
+    local knightConfig = knightConfCache:get('appsConfig')
+     
+    if knightConfig then
         return knightConfig
     end
-
     -- cacahe lock
     local lock = resty_lock:new("knightConfLock",lockConf)
     local elapsed, err = lock:lock("knightConfLock")
     if not elapsed then
-        return nil,"failed to acquire the lock: " .. err
+        -- lock failed acquired
     end
-    local knightJson,err = knightConfCache:get('appsConfig')
-    if err then
-        return nil,"failed to get key from shm: " .. err
-    end 
 
-    if knightJson then
+    local knightConfig = knightConfCache:get('appsConfig')
+    
+    if knightConfig then
         local ok, err = lock:unlock()
         if not ok then
             return nil,"failed to unlock: " .. err
         end
-        local err, knightConfig = jdecode(knightJson)
         return knightConfig
     end
 
@@ -106,7 +100,6 @@ _M.run = function()
     end
 
     return knightConfig
-
 end
 
 return _M
