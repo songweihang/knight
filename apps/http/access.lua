@@ -5,21 +5,31 @@ local statsCache 	= ngx.shared.stats
 local statsAllCache = ngx.shared.statsAll
 
 local T = statsCache:get(statsConf.http_success_time)
+--ngx.say(T)
+
+function dump(o)
+    if type(o) == 'table' then
+        local s = ''
+        for k,v in pairs(o) do
+            if type(k) ~= 'number'
+            then
+                sk = '"'..k..'"'
+            else
+                sk =  k
+            end
+            s = s .. ', ' .. '['..sk..'] = ' .. dump(v)
+        end
+        s = string.sub(s, 3)
+        return '{ ' .. s .. '} '
+    else
+        return tostring(o)
+    end
+end
 
 --ngx.say(type(statsConf))
 
---ngx.say(ngx.var.request_body)
-ngx.say(T)
-
-local uri = ngx.var.uri
-if uri == nil then
-	return
-end
-
+--
 local stats = require "apps.lib.stats"
-local conf = stats.initStatsAll(statsConf,uri)
-ngx.say(conf.http_total)
-ngx.say(statsAllCache:get(conf.http_success_time))
 
 local ngxmatch         = ngx.re.match
 local match 		   = string.match

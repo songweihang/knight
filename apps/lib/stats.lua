@@ -4,6 +4,7 @@ local _M = {}
 
 _M._VERSION = '0.1'
 
+local ngx 						= ngx
 local systemConf 				= require "config.init"
 local statsConf 				= systemConf.statsConf
 
@@ -11,6 +12,18 @@ local statsCache       			= ngx.shared.stats
 local statsAllCache       		= ngx.shared.statsAll
 local ngxmatch         			= ngx.re.match
 local match 		   			= string.match
+
+--[[
+	获取当前url路径
+    @return 
+]]--
+local uri = function()
+	local uri = ngx.var.uri
+	if uri == nil then
+		return "_"
+	end
+	return uri
+end
 
 --[[
 	初始化统计缓存
@@ -66,31 +79,42 @@ _M.run = function()
 	--_M.statsAll()
 end
 
-local function statsMatch()
-	
+function _M.statsMatch()
+
+	if ngx.var.request_method ~= 'GET' and ngx.var.request_method ~= 'DELETE'  
+		and ngx.var.request_method ~= 'HEAD' and ngx.var.request_method ~= 'OPTIONS' then
+
+		local body = ngx.var.request_body
+		if body ~= nil then
+			--  body + uri
+			local tmp = {}
+			table.insert(tmp, uri())
+			table.insert(tmp, body)
+			table.concat(tmp, "")
+		else
+			-- uri	
+		end
+	else
+		-- uri
+	end		
 end
 
 function _M.statsAll()
-
-	local uri = ngx.var.uri
-	if uri == nil then
-		return
-	end
-	local statsAllConf = _M.initStatsAll(statsConf,uri)
+	local statsAllConf = _M.initStatsAll()
 	incrStatsNumCache(statsAllCache,statsAllConf)
 end
 
-function _M.initStatsAll(statsConf,prefix)
+function _M.initStatsAll()
 	
-	local prefix = '_'..prefix
 	local StatsAllConf = {}
-	--构建统计key
-	StatsAllConf.http_total = statsConf.http_total..prefix
-	StatsAllConf.http_fail = statsConf.http_fail..prefix
-	StatsAllConf.http_success_time = statsConf.http_success_time..prefix
-	StatsAllConf.http_fail_time = statsConf.http_fail_time..prefix
-	StatsAllConf.http_success_upstream_time = statsConf.http_success_upstream_time..prefix
-	StatsAllConf.http_fail_upstream_time = statsConf.http_fail_upstream_time..prefix
+	
+	for k, v in pairs(statsConf) do
+		local tmp = {}
+		table.insert(tmp, v)
+		table.insert(tmp, ngx.var.host)
+		table.insert(tmp, uri())
+		StatsAllConf[k] = table.concat(tmp, "")
+	end
 
 	-- 初始化统计值
 	intStatsNumCache(statsAllCache,StatsAllConf)

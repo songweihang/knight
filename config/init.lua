@@ -20,12 +20,12 @@ _M.redisConf = {
 }
 
 _M.statsConf = {
-    ["http_total"]                     = "T",
-    ["http_fail"]                      = "F",
-    ["http_success_time"]              = "S:T",
-    ["http_fail_time"]                 = "F:T",
-    ["http_success_upstream_time"]     = "S:UT",
-    ["http_fail_upstream_time"]        = "F:UT",
+    ["http_total"]                     = "T_",
+    ["http_fail"]                      = "F_",
+    ["http_success_time"]              = "S_T_",
+    ["http_fail_time"]                 = "F_T_",
+    ["http_success_upstream_time"]     = "S_UT_",
+    ["http_fail_upstream_time"]        = "F_UT_",
 }
 
 return _M
