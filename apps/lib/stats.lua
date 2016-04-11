@@ -4,26 +4,19 @@ local _M = {}
 
 _M._VERSION = '0.1'
 
-local ngx 						= ngx
+local ngx_var 					= ngx.var
 local systemConf 				= require "config.init"
-local statsConf 				= systemConf.statsConf
+local statsPrefixConf 			= systemConf.statsPrefixConf
+local statsMatchConf			= systemConf.statsMatchConf
+local statsAllSwitchConf		= systemConf.statsAllSwitchConf
 
+-- ngx.shared.DICT 
 local statsCache       			= ngx.shared.stats
 local statsAllCache       		= ngx.shared.statsAll
+local statsMatchCache        	= ngx.shared.statsMatch
+
 local ngxmatch         			= ngx.re.match
 local match 		   			= string.match
-
---[[
-	获取当前url路径
-    @return 
-]]--
-local uri = function()
-	local uri = ngx.var.uri
-	if uri == nil then
-		return "_"
-	end
-	return uri
-end
 
 --[[
 	初始化统计缓存
@@ -51,51 +44,68 @@ end
 ]]--
 local function incrStatsNumCache(cache,conf)
 
+	if tonumber(ngx_var.status) == 499 then
+		return
+	end
+	
 	cache:incr(conf.http_total,1)
 	-- ngx.HTTP_INTERNAL_SERVER_ERROR
-	if tonumber(ngx.var.status) >= ngx.HTTP_BAD_REQUEST then
+	if tonumber(ngx_var.status) >= 400 then
 		-- HTTP FAIL 
 		cache:incr(conf.http_fail,1)
-		cache:incr(conf.http_fail_time,ngx.var.request_time)
-		if ngx.var.upstream_response_time ~= nil then
-			cache:incr(conf.http_fail_upstream_time,ngx.var.upstream_response_time)
+
+		cache:incr(conf.http_fail_time,ngx_var.request_time)
+		if ngx_var.upstream_response_time ~= nil then
+			cache:incr(conf.http_fail_upstream_time,ngx_var.upstream_response_time)
 		end
 	else
-		cache:incr(conf.http_success_time,ngx.var.request_time)
-		if ngx.var.upstream_response_time ~= nil then
-			cache:incr(conf.http_success_upstream_time,ngx.var.upstream_response_time)
+		cache:incr(conf.http_success_time,ngx_var.request_time)
+		if ngx_var.upstream_response_time ~= nil then
+			cache:incr(conf.http_success_upstream_time,ngx_var.upstream_response_time)
 		end
 	end
 end
 
 _M.init = function ()
 	--Initial stats
-	intStatsNumCache(statsCache,statsConf)
+	intStatsNumCache(statsCache,statsPrefixConf)
 end
 
 _M.run = function()
 	-- http 请求总统计数据
-	incrStatsNumCache(statsCache,statsConf)
-	--_M.statsAll()
+	incrStatsNumCache(statsCache,statsPrefixConf)
 end
 
 function _M.statsMatch()
 
-	if ngx.var.request_method ~= 'GET' and ngx.var.request_method ~= 'DELETE'  
-		and ngx.var.request_method ~= 'HEAD' and ngx.var.request_method ~= 'OPTIONS' then
+	local body,method = '',ngx_var.request_method
 
-		local body = ngx.var.request_body
+	if method ~= 'GET' and method ~= 'DELETE'  
+		and method ~= 'HEAD' and method ~= 'OPTIONS' then
+
+		body = ngx_var.request_body
 		if body ~= nil then
 			--  body + uri
 			local tmp = {}
-			table.insert(tmp, uri())
+			table.insert(tmp, ngx_var.uri)
 			table.insert(tmp, body)
 			table.concat(tmp, "")
 		else
 			-- uri	
 		end
 	else
-		-- uri
+		body = ngx_var.uri
+	end
+
+	-- 获取正则特殊定制统计
+	for i, v in ipairs(statsMatchConf) do
+    	local m = ngxmatch(body, v['match'],"o")
+	    if m then 
+	        --ngx.say(m[0])
+	        --intStatsNumCache(statsMatchCache,conf)
+	    else 
+	        --ngx.say("not matched!") 
+	    end
 	end		
 end
 
@@ -108,11 +118,11 @@ function _M.initStatsAll()
 	
 	local StatsAllConf = {}
 	
-	for k, v in pairs(statsConf) do
+	for k, v in pairs(statsPrefixConf) do
 		local tmp = {}
 		table.insert(tmp, v)
-		table.insert(tmp, ngx.var.host)
-		table.insert(tmp, uri())
+		table.insert(tmp, ngx_var.host)
+		table.insert(tmp, ngx_var.uri)
 		StatsAllConf[k] = table.concat(tmp, "")
 	end
 
