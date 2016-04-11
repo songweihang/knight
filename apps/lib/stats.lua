@@ -1,29 +1,39 @@
 local modulename = "appsLibStats"
 
-local _M = {}
-
-_M._VERSION = '0.1'
-
-local ngx_var 					= ngx.var
-local systemConf 				= require "config.init"
-local statsPrefixConf 			= systemConf.statsPrefixConf
-local statsMatchConf			= systemConf.statsMatchConf
-local statsAllSwitchConf		= systemConf.statsAllSwitchConf
-
--- ngx.shared.DICT 
-local statsCache       			= ngx.shared.stats
-local statsAllCache       		= ngx.shared.statsAll
-local statsMatchCache        	= ngx.shared.statsMatch
-
+local setmetatable 				= setmetatable
 local ngxmatch         			= ngx.re.match
 local match 		   			= string.match
+local tonumber 					= tonumber
+local assert 					= assert
+
+local _M = {}
+
+local _M = { _VERSION = '0.01' }
+
+local mt = { __index = _M }
+
+
+function _M.new(self,status,uri,host,request_time,upstream_response_time)
+    
+    --assert(status >0 and uri >= 0 and request_time >0 and upstream_response_time > 0 and host >0 )
+
+    local self = {
+    	status = status,
+        uri = uri,
+        host = host,
+        request_time = request_time,
+        upstream_response_time = upstream_response_time,
+    }
+
+    return setmetatable(self, mt)
+end
 
 --[[
 	初始化统计缓存
 	@param cache ngx_shared 
     @param table conf
     @return 
-]]--
+
 local function intStatsNumCache(cache,conf)
 
 	local ok, err = cache:add(conf.http_total,0)
@@ -36,65 +46,68 @@ local function intStatsNumCache(cache,conf)
 	end
 end
 
+_M.init = function ()
+	--Initial stats
+	intStatsNumCache(statsCache,statsPrefixConf)
+end
+]]--
+
 --[[
 	统计计数器
 	@param cache ngx_shared 
     @param table conf
     @return 
 ]]--
-local function incrStatsNumCache(cache,conf)
+function _M.incrStatsNumCache(self,cache,conf)
 
-	if tonumber(ngx_var.status) == 499 then
+	local request_time = self.request_time
+	local upstream_response_time = self.upstream_response_time
+	local status = self.status
+
+	-- 忽略 499 客户端链接中断的数据
+	if tonumber(status) == 499 then
 		return
 	end
 	
 	cache:incr(conf.http_total,1)
 	-- ngx.HTTP_INTERNAL_SERVER_ERROR
-	if tonumber(ngx_var.status) >= 400 then
+	if tonumber(status) >= 400 then
 		-- HTTP FAIL 
 		cache:incr(conf.http_fail,1)
 
-		cache:incr(conf.http_fail_time,ngx_var.request_time)
-		if ngx_var.upstream_response_time ~= nil then
-			cache:incr(conf.http_fail_upstream_time,ngx_var.upstream_response_time)
+		cache:incr(conf.http_fail_time,request_time)
+		if upstream_response_time > 0 then
+			cache:incr(conf.http_fail_upstream_time,upstream_response_time)
 		end
 	else
-		cache:incr(conf.http_success_time,ngx_var.request_time)
-		if ngx_var.upstream_response_time ~= nil then
-			cache:incr(conf.http_success_upstream_time,ngx_var.upstream_response_time)
+		cache:incr(conf.http_success_time,request_time)
+		if upstream_response_time > 0 then
+			cache:incr(conf.http_success_upstream_time,upstream_response_time)
 		end
 	end
+	return
 end
 
-_M.init = function ()
-	--Initial stats
-	intStatsNumCache(statsCache,statsPrefixConf)
-end
+function _M.statsMatch(self)
 
-_M.run = function()
-	-- http 请求总统计数据
-	incrStatsNumCache(statsCache,statsPrefixConf)
-end
+	local ngx_var_uri = self.ngx_var_uri
+	local request_method,body = ngx.var.request_method
 
-function _M.statsMatch()
+	if request_method ~= 'GET' and request_method ~= 'DELETE'  
+		and request_method ~= 'HEAD' and request_method ~= 'OPTIONS' then
 
-	local body,method = '',ngx_var.request_method
-
-	if method ~= 'GET' and method ~= 'DELETE'  
-		and method ~= 'HEAD' and method ~= 'OPTIONS' then
-
-		body = ngx_var.request_body
+		body = ngx.var.request_body
 		if body ~= nil then
 			--  body + uri
 			local tmp = {}
-			table.insert(tmp, ngx_var.uri)
+			table.insert(tmp, ngx_var_uri)
 			table.insert(tmp, body)
 			table.concat(tmp, "")
 		else
 			-- uri	
 		end
 	else
-		body = ngx_var.uri
+		body = ngx_var_uri
 	end
 
 	-- 获取正则特殊定制统计
@@ -109,20 +122,22 @@ function _M.statsMatch()
 	end		
 end
 
-function _M.statsAll()
+function _M.statsAll(self)
 	local statsAllConf = _M.initStatsAll()
 	incrStatsNumCache(statsAllCache,statsAllConf)
 end
 
-function _M.initStatsAll()
+function _M.initStatsAll(self)
 	
-	local StatsAllConf = {}
+	local ngx_var_uri 	= self.ngx_var_uri
+	local ngx_var_host 	= self.ngx_var_host
+	local StatsAllConf 	= {}
 	
 	for k, v in pairs(statsPrefixConf) do
 		local tmp = {}
 		table.insert(tmp, v)
-		table.insert(tmp, ngx_var.host)
-		table.insert(tmp, ngx_var.uri)
+		table.insert(tmp, ngx_var_host)
+		table.insert(tmp, ngx_var_uri)
 		StatsAllConf[k] = table.concat(tmp, "")
 	end
 
