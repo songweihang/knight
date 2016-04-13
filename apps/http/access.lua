@@ -6,7 +6,15 @@ local statsMatchConf   = systemConf.statsMatchConf
 local statsCache 	   = ngx.shared.stats
 local statsAllCache    = ngx.shared.statsAll
 
---ngx.say(statsCache:get(statsPrefixConf.http_total))
+--[[
+if jit then 
+    ngx.say(jit.version) 
+else 
+    ngx.say(_VERSION) 
+end
+]]--
+
+ngx.say(statsCache:get(statsPrefixConf.http_total))
 
 function dump(o)
     if type(o) == 'table' then
@@ -30,6 +38,7 @@ end
 -- 过滤nginx无法处理请求
 
 --ngx.say(ngx.var.request_time)
+
 
 
 

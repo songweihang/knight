@@ -30,6 +30,8 @@ _M.statsPrefixConf = {
 
 _M.statsAllSwitchConf    = true
 
+_M.statsMatchSwitchConf  = false
+
 _M.statsMatchConf = {
     {["match"]="[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}",["switch"]=true,["limit"]=false}
 }
