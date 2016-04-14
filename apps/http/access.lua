@@ -3,9 +3,10 @@ local systemConf 	   = require "config.init"
 local statsPrefixConf  = systemConf.statsPrefixConf
 local statsMatchConf   = systemConf.statsMatchConf
 
-local statsCache 	   = ngx.shared.stats
-local statsAllCache    = ngx.shared.statsAll
-
+--local statsCache 	   = ngx.shared.stats
+--local statsAllCache    = ngx.shared.statsAll
+--local statsMatchCache  = ngx.shared.statsMatch
+local ngx_shared       = ngx.shared
 --[[
 if jit then 
     ngx.say(jit.version) 
@@ -14,8 +15,10 @@ else
 end
 ]]--
 
-ngx.say(statsCache:get(statsPrefixConf.http_total))
+--ngx.say(statsMatchCache:get(statsPrefixConf.http_total .. 'api.model.xxxx'))
+--ngx.say(ngx.var.args)
 
+local keys = ngx_shared['statsMatch']:get_keys(0)
 function dump(o)
     if type(o) == 'table' then
         local s = ''
@@ -38,6 +41,7 @@ end
 -- 过滤nginx无法处理请求
 
 --ngx.say(ngx.var.request_time)
+ngx.say(dump(keys))
 
 
 

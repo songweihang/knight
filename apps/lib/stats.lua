@@ -10,19 +10,29 @@ local _M = { _VERSION = '0.01' }
 local mt = { __index = _M }
 
 
-function _M.new(self,status,uri,host,request_time,upstream_response_time)
+function _M.new(self,status,request_time,upstream_response_time)
     
     --assert(status >0 and uri >= 0 and request_time >0 and upstream_response_time > 0 and host >0 )
 
     local self = {
     	status = status,
-        uri = uri,
-        host = host,
         request_time = request_time,
         upstream_response_time = upstream_response_time,
     }
 
     return setmetatable(self, mt)
+end
+
+local function intStatsNumCache(cache,conf)
+
+	local ok, err = cache:add(conf.http_total,0)
+	if ok then
+		cache:add(conf.http_fail,0)
+		cache:add(conf.http_success_time,0)
+		cache:add(conf.http_fail_time,0)
+		cache:add(conf.http_success_upstream_time,0)
+		cache:add(conf.http_fail_upstream_time,0)
+	end
 end
 
 --[[
@@ -42,6 +52,9 @@ function _M.incrStatsNumCache(self,cache,conf)
 		return
 	end
 	
+	-- 初始化计数器
+	intStatsNumCache(cache,conf)
+
 	cache:incr(conf.http_total,1)
 	-- ngx.HTTP_INTERNAL_SERVER_ERROR
 	if status >= 400 then
@@ -60,6 +73,7 @@ function _M.incrStatsNumCache(self,cache,conf)
 	end
 	return
 end
+
 
 
 return _M
