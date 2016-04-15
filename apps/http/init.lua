@@ -1,18 +1,13 @@
---local stats = require "apps.lib.stats".init()
-
 local statsCache 				= ngx.shared.stats
 local systemConf 				= require "config.init"
-local statsPrefixConf 			= systemConf.statsPrefixConf
+local statsMainConf 			= systemConf.statsMainConf
 
+--local stats = require "apps.lib.stats"
+--local statsRun = stats:new()
+--statsRun:add_stats_num_cache('stats',statsMainConf)
 --[[
-	初始化统计缓存
-	@param cache ngx_shared 
-    @param table conf
-    @return 
-]]--
-local function intStatsNumCache(cache,conf)
+local function add_stats_num_cache(cache,conf)
 
-	local ok, err = cache:add(conf.http_total,0)
 	if ok then
 		cache:add(conf.http_fail,0)
 		cache:add(conf.http_success_time,0)
@@ -22,5 +17,5 @@ local function intStatsNumCache(cache,conf)
 	end
 end
 
-
-intStatsNumCache(statsCache,statsPrefixConf)
+add_stats_num_cache(statsCache,statsMainConf)
+]]--

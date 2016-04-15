@@ -19,21 +19,23 @@ _M.redisConf = {
     ["dbid"]     = 0,
 }
 
-_M.statsPrefixConf = {
-    ["http_total"]                     = "T_",
-    ["http_fail"]                      = "F_",
-    ["http_success_time"]              = "S_T_",
-    ["http_fail_time"]                 = "F_T_",
-    ["http_success_upstream_time"]     = "S_UT_",
-    ["http_fail_upstream_time"]        = "F_UT_",
+_M.stats_main_conf = {
+    ["total"]                     = "T",
+    ["fail"]                      = "F",
+    ["success_time"]              = "S_T",
+    ["fail_time"]                 = "F_T",
+    ["success_upstream_time"]     = "S_UT",
+    ["fail_upstream_time"]        = "F_UT",
 }
 
-_M.statsAllSwitchConf    = true
+_M.stats_main_switch   = true
 
-_M.statsMatchSwitchConf  = true
+_M.stats_all_switch    = true
 
-_M.statsMatchConf = {
-    {["match"]="[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}",["switch"]=true,["limit"]=false}
+_M.stats_match_switch  = true
+
+_M.stats_match_conf = {
+    {["match"]="[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}",["switch"]=true,["limit"]=false,["host"]="127.0.0.1"}
 }
 
 return _M

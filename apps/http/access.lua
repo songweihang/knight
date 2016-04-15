@@ -18,7 +18,7 @@ end
 --ngx.say(statsMatchCache:get(statsPrefixConf.http_total .. 'api.model.xxxx'))
 --ngx.say(ngx.var.args)
 
-local keys = ngx_shared['statsMatch']:get_keys(0)
+local keys = ngx_shared['stats_match_keys']:get_keys(0)
 function dump(o)
     if type(o) == 'table' then
         local s = ''
@@ -41,6 +41,8 @@ end
 -- 过滤nginx无法处理请求
 
 --ngx.say(ngx.var.request_time)
+ngx.say(dump(keys))
+local keys = ngx_shared['stats_all_total']:get('127.0.0.1/')
 ngx.say(dump(keys))
 
 
