@@ -1,11 +1,12 @@
-local modulename = "appsLibStats"
+-- Copyright (C) 2016-2016 WeiHang Song (Jakin)
+-- 此库需要在log_by_lua阶段中执行，主要实现获取HTTP请求数据统计
 
 local setmetatable 				= setmetatable
 local assert 					= assert
 local ngx_shared 				= ngx.shared
-local sharedkeys 				= {}
+local shared_names 				= {}
 
-sharedkeys['all'] = {
+shared_names['all'] = {
 	["keys"] = "stats_all_keys",
 	["total"] = "stats_all_total",
 	["fail"] = "stats_all_fail",
@@ -15,7 +16,7 @@ sharedkeys['all'] = {
 	["fail_upstream_time"] = "stats_all_fail_upstream_time"
 }
 
-sharedkeys['match'] = {
+shared_names['match'] = {
 	["keys"] = "stats_match_keys",
 	["total"] = "stats_match_total",
 	["fail"] = "stats_match_fail",
@@ -45,15 +46,9 @@ function _M.new(self,status,request_time,upstream_response_time)
 end
 
 
---[[
-	初始化
-	@param string keys 
-    @param string conf
-    @return 
-]]--
-local function add_stats_num_cache(keys,conf)
+local function add_stats_num_cache(keys,rule)
 
-	local sharedconf = sharedkeys[conf]
+	local sharedconf = shared_names[rule]
 
 	local ok, err = ngx_shared[sharedconf.keys]:add(keys,0)
 	if ok then
@@ -67,15 +62,9 @@ local function add_stats_num_cache(keys,conf)
 end
 
 
---[[
-	统计计数器
-	@param string keys 
-    @param string conf
-    @return 
-]]--
-function _M.incr_stats_num_cache(self,keys,conf)
+function _M.incr_stats_num_cache(self,keys,rule)
 
-	local sharedconf = sharedkeys[conf]
+	local sharedconf = shared_names[rule]
 
 	local request_time = self.request_time
 	local upstream_response_time = self.upstream_response_time
@@ -87,7 +76,7 @@ function _M.incr_stats_num_cache(self,keys,conf)
 	end
 	
 	-- 初始化计数器
-	add_stats_num_cache(keys,conf)
+	add_stats_num_cache(keys,rule)
 
 	ngx_shared[sharedconf.total]:incr(keys,1)
 	-- ngx.HTTP_INTERNAL_SERVER_ERROR
@@ -109,12 +98,6 @@ function _M.incr_stats_num_cache(self,keys,conf)
 end
 
 
---[[
-	统计计数器
-	@param string keys 
-    @param string conf
-    @return 
-]]--
 function _M.request_data(self,uri)
 
 	local request_method,body = ngx.var.request_method,''
@@ -122,9 +105,9 @@ function _M.request_data(self,uri)
 	if request_method == 'GET' or request_method == 'DELETE'  
 		or request_method == 'HEAD' or request_method == 'OPTIONS' then
 
-		local ngx_var_args = ngx.var.args
-		if ngx_var_args ~= nil then
-			body = uri .. ngx.var.args	
+		local args = ngx.var.args
+		if args ~= nil then
+			body = uri .. args	
 		else
 			body = uri
 		end

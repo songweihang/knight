@@ -2,10 +2,6 @@ local knightConfig 	   = require "config.knight".run()
 local systemConf 	   = require "config.init"
 local statsPrefixConf  = systemConf.statsPrefixConf
 local statsMatchConf   = systemConf.statsMatchConf
-
---local statsCache 	   = ngx.shared.stats
---local statsAllCache    = ngx.shared.statsAll
---local statsMatchCache  = ngx.shared.statsMatch
 local ngx_shared       = ngx.shared
 --[[
 if jit then 
@@ -14,10 +10,6 @@ else
     ngx.say(_VERSION) 
 end
 ]]--
-
---ngx.say(statsMatchCache:get(statsPrefixConf.http_total .. 'api.model.xxxx'))
---ngx.say(ngx.var.args)
-
 local keys = ngx_shared['stats_match_keys']:get_keys(0)
 function dump(o)
     if type(o) == 'table' then
@@ -40,14 +32,9 @@ end
 
 -- 过滤nginx无法处理请求
 
---ngx.say(ngx.var.request_time)
 ngx.say(dump(keys))
-local keys = ngx_shared['stats_all_total']:get('127.0.0.1/')
+local keys = ngx_shared['stats_match_success_time']:get('api.model.getxxx')
 ngx.say(dump(keys))
-
-
-
-
 
 --local stats = require "apps.lib.stats"
 --local a = stats:new(1,2,3,4,5)
