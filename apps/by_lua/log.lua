@@ -16,8 +16,10 @@ local stats_center = stats:new(uri,status,request_time,upstream_response_time)
 
 -- 全局urL统计
 if stats_all_switch then
-	local hostUri = host .. uri
-	stats_center:incr(hostUri,"all")
+	if uri ~= "/favicon.ico" then
+		local hostUri = host .. uri
+		stats_center:incr(hostUri,"all")
+	end
 end
 
 

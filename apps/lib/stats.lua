@@ -7,6 +7,7 @@ local ngxshared 				= ngx.shared
 local ngxfind                   = ngx.re.find
 local sub                       = string.sub
 --local strfind                   = string.find
+local strformat 				= string.format
 local tonumber                  = tonumber
 local error                     = error
 local SHARED_NAMES 				= {}
@@ -82,7 +83,7 @@ function _M.new(self,uri,status,request_time,upstream_response_time)
     	uri    = uri or "-",
     	status = tonumber(status) or 499,
         request_time = request_time or 0,
-        upstream_response_time = upstream_response_time or 0,
+        upstream_response_time = tonumber(upstream_response_time) or 0,
     }
 
     return setmetatable(self, mt)
@@ -164,7 +165,7 @@ function _M.incr_match(self,body,match)
 end
 
 
-function _M.read_key_result(self,key,rule)
+local function read_key_result(self,key,rule)
 	local shareddict = SHARED_NAMES[rule]
 
 	if shareddict == nil then
@@ -184,20 +185,54 @@ function _M.read_key_result(self,key,rule)
 		_flush_key(key,rule)
 		return nil
 	else
-		return total,fail,success_time,fail_time,success_upstream_time,fail_upstream_time
+		-- 接口成功率
+		local success_ratio = strformat("%.3f",(total-fail)/total*100)
+		-- 成功接口请求平均时间
+		local success_avg_time_ratio = strformat("%.2f",success_time/(total-fail)*1000)
+		-- 成功接口上游请求时间
+		local success_avg_upstream_time_ratio = strformat("%.2f",success_upstream_time/(total-fail)*1000)
+		-- 失败接口请求平均时间
+		local fail_avg_time_ratio = strformat("%.2f",fail_time/fail*1000)
+		-- 失败接口上游请求时间
+		local fail_avg_upstream_time_ratio = strformat("%.2f",fail_upstream_time/fail*1000)
+
+		return {
+			["api"]=key,
+			["total"]=total,
+			["fail"]=fail,
+			["success_time"]=success_time,
+			["success_upstream_time"]=success_upstream_time,
+			["success_ratio"]=success_ratio,
+			["success_avg_time_ratio"]=success_avg_time_ratio,
+			["success_avg_upstream_time_ratio"]=success_avg_upstream_time_ratio,
+			["fail_avg_time_ratio"]=fail_avg_time_ratio,
+			["fail_avg_upstream_time_ratio"]=fail_avg_upstream_time_ratio
+		}
 	end
 end
+
+_M.read_key_result = read_key_result
 
 
 -- 调用此方法需要非常小心 会驻塞所有访问字典的nginx worker
 function _M.read_key_lists(self,rule)
+	local tableinsert = table.insert
 	local shareddict = SHARED_NAMES[rule]
 
 	if shareddict == nil then
 		error('not rule initialized')
 	end
 
-	return ngxshared[shareddict.keys]:get_keys(0)
+	local keys,lists = ngxshared[shareddict.keys]:get_keys(0),{}
+
+	for i, key in ipairs(keys) do
+		local ratio = read_key_result(self,key,rule)
+		if ratio ~= nil then
+  			tableinsert(lists,ratio)
+  		end
+	end
+
+	return lists
 end
 
 
