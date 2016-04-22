@@ -4,8 +4,9 @@ local handler
 
 --第一个参数为premature
 function handler(premature, params)
-	red:set(ngx.now(), ngx.now())
-	ngx.log(ngx.DEBUG, "ngx.time.at:", ngx.now(), " premature:", url, " params:", url2)
+    
+	red:get(ngx.now(), ngx.now())
+	
 	--递归
 	local ok, err = ngx.timer.at(5, handler, "params-data")
 	ngx.log(ngx.DEBUG, "ok:", ok, " err:", err)
