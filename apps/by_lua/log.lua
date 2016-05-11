@@ -1,6 +1,7 @@
 local system_conf                   = require "config.init"
 local stats_main_conf               = system_conf.stats_main_conf
 local stats_match_conf              = system_conf.stats_match_conf
+local stats_all_conf				= system_conf.stats_all_conf
 local stats_all_switch              = system_conf.stats_all_switch
 local stats_match_switch            = system_conf.stats_match_switch
 
@@ -17,8 +18,13 @@ local stats_center = stats:new(uri,status,request_time,upstream_response_time)
 -- 全局urL统计
 if stats_all_switch then
 	if uri ~= "/favicon.ico" then
-		local hostUri = host .. uri
-		stats_center:incr(hostUri,"all")
+		for i, v in ipairs(stats_all_conf) do
+			if v['switch'] and host == v['host'] then
+				local hostUri = host .. uri
+				stats_center:incr(hostUri,"all")
+				break
+			end
+		end
 	end
 end
 

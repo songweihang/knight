@@ -38,6 +38,7 @@ local _M = { _VERSION = '0.02' }
 
 local mt = { __index = _M }
 
+
 local function _add_num_cache(key,rule)
 	local shareddict = SHARED_NAMES[rule]
 
@@ -141,7 +142,7 @@ function _M.read_body(self)
 		end
 	else
 		local request_body = ngx.var.request_body
-		if body ~= nil then
+		if request_body ~= nil then
 			body = uri .. request_body
 		else
 			body = uri
@@ -231,5 +232,22 @@ function _M.read_key_lists(self,rule)
 	return lists
 end
 
+
+function _M.flush_all(self,rule)
+	local shareddict  = SHARED_NAMES[rule]
+
+	if shareddict == nil then
+		error('not rule initialized')
+	end
+
+	ngxshared[shareddict.lock]:flush_all()
+	ngxshared[shareddict.keys]:flush_all()
+	ngxshared[shareddict.total]:flush_all()
+	ngxshared[shareddict.fail]:flush_all()
+	ngxshared[shareddict.success_time]:flush_all()
+	ngxshared[shareddict.fail_time]:flush_all()
+	ngxshared[shareddict.success_upstream_time]:flush_all()
+	ngxshared[shareddict.fail_upstream_time]:flush_all()
+end
 
 return _M

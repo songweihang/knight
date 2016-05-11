@@ -3,7 +3,7 @@ local _M = {}
 
 _M._VERSION = '0.1'
 
-_M.knightJsonPath =  '/Users/apple/Jakin/knight/config/knight.json'
+_M.knightJsonPath =  '../config/knight.json'
 
 _M.lockConf = {
     ["exptime"] = 0.001
@@ -22,14 +22,14 @@ _M.redisConf = {
 _M.stats_all_switch    = true
 
 _M.stats_all_conf = {
-    {["switch"]=true,["limit"]=false,["host"]="127.0.0.1"}
+    {["switch"]=true,["limit"]=false,["host"]="circle.n8n8.cn"}
 }
 
 _M.stats_match_switch  = true
 
 _M.stats_match_conf = {
-    {["host"]="127.0.0.1",["match"]="[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}",["switch"]=true,["limit"]=0},
-    {["host"]="ads1.yidejia.com",["match"]="[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}",["switch"]=true,["limit"]=0}
+    {["host"]="fw.jingzhuan.cn",["match"]="[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}",["switch"]=true,["limit"]=0},
+    {["host"]="sj.jingzhuan.cn",["match"]="[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}",["switch"]=true,["limit"]=0}
 }
 
 return _M
