@@ -136,14 +136,14 @@ function _M.read_body(self)
 
 		local args = ngx.var.args
 		if args ~= nil then
-			body = uri .. args	
+			body = uri .. '?' .. args	
 		else
 			body = uri
 		end
 	else
 		local request_body = ngx.var.request_body
 		if request_body ~= nil then
-			body = uri .. request_body
+			body = uri .. '?' .. request_body
 		else
 			body = uri
 		end
@@ -182,24 +182,32 @@ local function read_key_result(self,key,rule)
 		_flush_key(key,rule)
 		return nil
 	else
+		--成功请求次数
+		local success_total = total-fail
 		-- 接口成功率
-		local success_ratio = strformat("%.3f",(total-fail)/total*100)
-		-- 成功接口请求平均时间
-		local success_time_avg = strformat("%.2f",success_time/(total-fail)*1000)
-		-- 成功接口上游请求时间
-		local success_upstream_time_avg = strformat("%.2f",success_upstream_time/(total-fail)*1000)
-		-- 失败接口请求平均时间
-		local fail_time_avg = strformat("%.2f",fail_time/fail*1000)
-		-- 失败接口上游请求时间
-		local fail_upstream_time_avg = strformat("%.2f",fail_upstream_time/fail*1000)
+		local success_ratio = strformat("%.3f",success_total/total*100)
+		local success_time_avg,success_upstream_time_avg,fail_time_avg,fail_upstream_time_avg = '0.00','0.00','0.00','0.00'
+		if success_total > 0 then
+			-- 成功接口请求平均时间
+			success_time_avg = strformat("%.2f",success_time/success_total*1000)
+			-- 成功接口上游请求时间
+			success_upstream_time_avg = strformat("%.2f",success_upstream_time/success_total*1000)
+		end
+
+		if fail > 0 then
+			-- 失败接口请求平均时间
+			fail_time_avg = strformat("%.2f",fail_time/fail*1000)
+			-- 失败接口上游请求时间
+			fail_upstream_time_avg = strformat("%.2f",fail_upstream_time/fail*1000)
+		end
 
 		return {
 			["api"] = key,
 			["total"] = total,
 			["fail"] = fail,
+			["success_ratio"] = success_ratio,
 			["success_time"] = success_time,
 			["success_upstream_time"] = success_upstream_time,
-			["success_ratio"] = success_ratio,
 			["success_time_avg"] = success_time_avg,
 			["success_upstream_time_avg"] = success_upstream_time_avg,
 			["fail_time_avg"] = fail_time_avg,

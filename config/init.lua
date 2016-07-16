@@ -28,7 +28,7 @@ _M.stats_all_conf = {
 _M.stats_match_switch  = true
 
 _M.stats_match_conf = {
-    {["host"]="127.0.0.1",["match"]="[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}\\.[a-z A-Z]{1,10}",["switch"]=true,["limit"]=0}
+    {["host"]="127.0.0.1",["match"]="\\/api\\/v\\d+\\/[\\/ a-z A-Z]+",["switch"]=true,["limit"]=0}
 }
 
 return _M

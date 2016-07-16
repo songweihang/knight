@@ -17,21 +17,21 @@ local stats_center = stats:new(uri,status,request_time,upstream_response_time)
 
 -- 全局urL统计
 if stats_all_switch then
-	if uri ~= "/favicon.ico" then
-		for i, v in ipairs(stats_all_conf) do
-			if v['switch'] and host == v['host'] then
-				local hostUri = host .. uri
-				stats_center:incr(hostUri,"all")
-				break
-			end
-		end
-	end
+    if uri ~= "/favicon.ico" then
+        for i, v in ipairs(stats_all_conf) do
+            if v['switch'] and host == v['host'] then
+                local hostUri = host .. uri
+                stats_center:incr(hostUri,"all")
+                break
+            end
+        end
+    end
 end
 
 
+local body = stats_center:read_body()
 -- 正则匹配统计
 if stats_match_switch then
-	local body = stats_center:read_body()
 	-- 获取正则特殊定制统计
 	for i, v in ipairs(stats_match_conf) do
 		if v['switch'] and host == v['host'] then
@@ -40,3 +40,7 @@ if stats_match_switch then
 		end
 	end
 end
+
+local httplogging = require "apps.lib.httplogging"
+local log = httplogging:new(status,host,body,request_time,upstream_response_time)
+log:run()
