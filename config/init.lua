@@ -19,7 +19,7 @@ _M.redisConf = {
     ["dbid"]     = 0,
 }
 
-_M.stats_all_switch    = true
+_M.stats_all_switch    = false
 
 _M.stats_all_conf = {
     {["switch"]=true,["limit"]=false,["host"]="127.0.0.1"}
@@ -29,6 +29,17 @@ _M.stats_match_switch  = true
 
 _M.stats_match_conf = {
     {["host"]="127.0.0.1",["match"]="\\/api\\/v\\d+\\/[\\/ a-z A-Z]+",["switch"]=true,["limit"]=0}
+}
+
+--访问白名单
+_M.whitelist_ips = {
+    --"127.0.0.1"
+}
+
+--限流
+_M.limit = {
+    ['req'] = {["rate"]=200,["burst"]=100},
+    ['conn'] = {["rate"]=50,["burst"]=50}
 }
 
 return _M

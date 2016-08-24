@@ -241,7 +241,7 @@ Copyright and License
 
 This module is licensed under the BSD license.
 
-Copyright (C) 2015, by Yichun "agentzh" Zhang, CloudFlare Inc.
+Copyright (C) 2015-2016, by Yichun "agentzh" Zhang, CloudFlare Inc.
 
 All rights reserved.
 
@@ -261,7 +261,7 @@ See Also
 * module [resty.limit.conn](./conn.md)
 * library [lua-resty-limit-traffic](../../../README.md)
 * the ngx_lua module: https://github.com/openresty/lua-nginx-module
-* OpenResty: http://openresty.org
+* OpenResty: https://openresty.org/
 
 [Back to TOC](#table-of-contents)
 

@@ -278,8 +278,8 @@ uncommit
 --------
 **syntax:** `ok, err = obj:uncommit(key)`
 
-This tries to undo the commit of the `incoming` call. This method is mainly for being used in the [resty.limit.conn](./conn.md)
-Lua module.
+This tries to undo the commit of the `incoming` call. This method is mainly for being used in the [resty.limit.traffic](./traffic.md)
+Lua module when combining multiple limiters at the same time.
 
 This method should not be used replace of the [leaving](#leaving) method though they are
 similar in effect and implementation.
@@ -297,7 +297,7 @@ Out-of-Sync Counter Prevention
 Under extreme conditions, like nginx worker processes crash in the middle of request processing,
 the counters stored in the shm zones can go out of sync. This can lead to catastrophic
 consequences like blindly rejecting *all* the incoming connections for ever. (Note that
-the standard ngx_limit_conn module also suffers from this issue.) We may
+the standard `ngx_limit_conn` module also suffers from this issue.) We may
 add automatic protection for such cases to this Lua module in the near future.
 
 Also, it is very important to ensure that the `leaving` call appears first in your
@@ -385,7 +385,7 @@ Copyright and License
 
 This module is licensed under the BSD license.
 
-Copyright (C) 2015, by Yichun "agentzh" Zhang, CloudFlare Inc.
+Copyright (C) 2015-2016, by Yichun "agentzh" Zhang, CloudFlare Inc.
 
 All rights reserved.
 
@@ -405,7 +405,7 @@ See Also
 * module [resty.limit.traffic](./traffic.md)
 * library [lua-resty-limit-traffic](../../../README.md)
 * the ngx_lua module: https://github.com/openresty/lua-nginx-module
-* OpenResty: http://openresty.org
+* OpenResty: https://openresty.org/
 
 [Back to TOC](#table-of-contents)
 

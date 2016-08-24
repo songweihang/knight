@@ -196,8 +196,8 @@ uncommit
 **syntax:** `ok, err = obj:uncommit(key)`
 
 This tries to undo the commit of the `incoming` call. This is simply an approximation
-and should be used with care. This method is mainly for being used in the [resty.limit.conn](./conn.md)
-Lua module.
+and should be used with care. This method is mainly for being used in the [resty.limit.traffic](./traffic.md)
+Lua module when combining multiple limiters at the same time.
 
 [Back to TOC](#table-of-contents)
 
@@ -280,7 +280,7 @@ Copyright and License
 
 This module is licensed under the BSD license.
 
-Copyright (C) 2015, by Yichun "agentzh" Zhang, CloudFlare Inc.
+Copyright (C) 2015-2016, by Yichun "agentzh" Zhang, CloudFlare Inc.
 
 All rights reserved.
 
@@ -300,7 +300,7 @@ See Also
 * module [resty.limit.traffic](./traffic.md)
 * library [lua-resty-limit-traffic](../../../README.md)
 * the ngx_lua module: https://github.com/openresty/lua-nginx-module
-* OpenResty: http://openresty.org
+* OpenResty: https://openresty.org/
 
 [Back to TOC](#table-of-contents)
 
