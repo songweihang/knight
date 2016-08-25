@@ -39,7 +39,7 @@ _M.whitelist_ips = {
 --限流
 _M.limit = {
     ['req'] = {["rate"]=200,["burst"]=100},
-    ['conn'] = {["rate"]=50,["burst"]=50}
+    ['conn'] = {["rate"]=10000,["burst"]=5000}
 }
 
 return _M

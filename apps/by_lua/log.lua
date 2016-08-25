@@ -28,6 +28,19 @@ if stats_match_switch then
 	end
 end
 
+local ctx = ngx.ctx
+local lim = ctx.limit_conn
+if lim then
+    local latency = tonumber(request_time) - ctx.limit_conn_delay
+    local key = ctx.limit_conn_key
+    assert(key)
+    local conn, err = lim:leaving(key, latency)
+    if not conn then
+        ngx.log(ngx.ERR,"failed to record the connection leaving ","request: ", err)
+        return
+    end
+end
+
 --local httplogging = require "apps.lib.httplogging"
 --local log = httplogging:new(status,host,body,request_time,upstream_response_time)
 --log:run()
