@@ -1,11 +1,10 @@
-  local iputils = require("resty.iputils")
-  iputils.enable_lrucache()
-  local whitelist_ips = {
-      "127.0.0.1",
-      "10.10.10.0/24",
-      "192.168.0.0/16",
-  }
+local system_conf = require "config.init"
+local limit_conf = require "config.limit"
 
-  -- WARNING: Global variable, recommend this is cached at the module level
-  -- https://github.com/openresty/lua-nginx-module#data-sharing-within-an-nginx-worker
-  whitelist = iputils.parse_cidrs(whitelist_ips)
+local lim_conf,err = limit_conf.new('imit_conf')
+if not lim_conf then
+    ngx.log(ngx.ERR,"failed to instantiate a limit_conf object: ", err)
+    return ngx.exit(500)
+end
+
+lim_conf:add(system_conf.limit)
