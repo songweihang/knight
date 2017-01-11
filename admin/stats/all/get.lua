@@ -1,4 +1,4 @@
-ngx.header["Content-Type"] = "text/html; charset=UTF-8"
+ngx.header["Content-Type"] = "application/json;charset=UTF-8"
 ngx.header["Access-Control-Allow-Origin"] = "*"
 
 local cjson             = require('cjson.safe')

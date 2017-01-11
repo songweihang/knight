@@ -10,11 +10,12 @@ local uri                           = ngx.var.uri or '-'
 local host                          = ngx.var.host or 'host'
 local request_time                  = ngx.var.request_time or 0
 local upstream_response_time        = ngx.var.upstream_response_time or 0
+local bytes_sent                    = ngx.var.bytes_sent or 0
 local log = ngx.log
 local ERR = ngx.ERR
 
 local stats = require "apps.lib.stats"
-local stats_center = stats:new(uri,status,request_time,upstream_response_time)
+local stats_center = stats:new(uri,status,request_time,upstream_response_time,bytes_sent)
 
 local body = stats_center:read_body()
 -- 正则匹配统计
