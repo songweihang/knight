@@ -1,4 +1,4 @@
--- Copyright (C) 2016-2016 WeiHang Song (Jakin)
+-- Copyright (C) 2016-2017 WeiHang Song (Jakin)
 -- 此库需要在log_by_lua阶段中执行，主要实现获取HTTP请求数据统计
 
 local setmetatable    = setmetatable
@@ -9,6 +9,8 @@ local strformat       = string.format
 local tonumber        = tonumber
 local error           = error
 local SHARED_NAMES    = {}
+local timer_at        = ngx.timer.at
+local delay 		  = 5
 
 SHARED_NAMES['all'] = {
 	["lock"] = "stats_all_key_lock",
@@ -36,7 +38,7 @@ SHARED_NAMES['match'] = {
 
 local _M = {}
 
-local _M = { _VERSION = '0.03' }
+local _M = { _VERSION = '0.04' }
 
 local mt = { __index = _M }
 
@@ -84,7 +86,7 @@ function _M.new(self,uri,status,request_time,upstream_response_time,bytes_sent)
 	--assert(status >0 and uri >= 0 and request_time >0 and upstream_response_time > 0 and host >0 )
 	local self = {
 		uri = uri or "-",
-		status = tonumber(status) or 499,
+		status = tonumber(status) or 498,
 		request_time = request_time or 0,
 		upstream_response_time = tonumber(upstream_response_time) or 0,
 		bytes_sent = tonumber(bytes_sent) or 0,
@@ -99,13 +101,12 @@ local function incr(self,key,rule)
 	if shareddict == nil then
 		error('not rule initialized')
 	end
-
 	local request_time = self.request_time
 	local upstream_response_time = self.upstream_response_time
 	local status = self.status
 	local bytes_sent = self.bytes_sent
 	-- 忽略 499 客户端链接中断的数据 TODO 400 405 408 414 494  501
-	if status == 499 then
+	if status == 498 then
 		return
 	end
 
@@ -115,7 +116,7 @@ local function incr(self,key,rule)
 	ngxshared[shareddict.total]:incr(key,1)
 	ngxshared[shareddict.bytes_sent]:incr(key,bytes_sent)
 	-- ngx.HTTP_INTERNAL_SERVER_ERROR
-	if status >= 400 then
+	if status >= 500 then
 		-- HTTP FAIL 
 		ngxshared[shareddict.fail]:incr(key,1)
 
@@ -254,6 +255,86 @@ function _M.read_key_lists(self,rule)
 	return lists
 end
 
+-- 把nginx访问数据刷入redis当中
+local function dump_redis(premature,rule,redis_conf)
+	local redis = require "resty.redis"
+    local red = redis:new()
+
+    red:set_timeout(redis_conf['timeout']) -- 1 sec
+
+    local ok, err = red:connect(redis_conf['host'], redis_conf['port'])
+    if not ok then
+        ngx.log(ngx.ERR, "failed to connect: ", err)
+        return
+    else
+    	if redis_conf['auth'] ~= nil then
+    	    red:auth(redis_conf['auth'])
+    	end
+    	red:select(redis_conf['dbid'])    
+    end
+
+	local shareddict = SHARED_NAMES[rule]
+
+	local keys,lists = ngxshared[shareddict.keys]:get_keys(0),{}
+
+	for i, key in ipairs(keys) do
+		local total = ngxshared[shareddict.total]:get(key)
+		local fail = ngxshared[shareddict.fail]:get(key)
+		local success_time = ngxshared[shareddict.success_time]:get(key)
+		local fail_time = ngxshared[shareddict.fail_time]:get(key)
+		local success_upstream_time = ngxshared[shareddict.success_upstream_time]:get(key)
+		local fail_upstream_time = ngxshared[shareddict.fail_upstream_time]:get(key)
+		local bytes_sent = ngxshared[shareddict.bytes_sent]:get(key)
+
+		if total == nil or fail == nil or success_time == nil or fail_time == nil 
+			or success_upstream_time == nil or fail_upstream_time == nil or bytes_sent == nil then
+			_flush_key(key,rule)
+		else
+			key = 'knightapi-' .. key
+			red:init_pipeline()
+			--写入redis
+    		red:hincrbyfloat(key,'total',total)
+    		red:hincrbyfloat(key,'fail',fail)
+    		red:hincrbyfloat(key,'success_time',success_time)
+    		red:hincrbyfloat(key,'fail_time',fail_time)
+    		red:hincrbyfloat(key,'success_upstream_time',success_upstream_time)
+    		red:hincrbyfloat(key,'fail_upstream_time',fail_upstream_time)
+    		red:hincrbyfloat(key,'bytes_sent',bytes_sent)
+    		local results, err = red:commit_pipeline()
+            if not results then
+                ngx.log(ngx.ERR,"failed to commit the pipelined requests: ", err)
+                return
+            end
+		end
+	end
+	-- 清理ngxshared[rule]的数据
+	_M.flush_all(self,rule)
+
+	local ok, err = red:set_keepalive(redis_conf['idletime'], redis_conf['poolsize'])
+    if not ok then
+        ngx.log(ngx.ERR, "failed to set keepalive: ", err)
+        return
+    end
+
+    timer_at(delay,dump_redis,rule,redis_conf)
+
+    ngx.log(ngx.ERR, "timer_at ing...",delay)
+end
+
+--执行redis写入任务
+function _M.timer_at_redis(self,rule,redis_conf)
+	local ok, err = timer_at(delay,dump_redis,rule,redis_conf)
+
+	if not ok then
+        ngx.log(ngx.ERR, "failed to create timer: ", err)
+        return
+    end
+end
+
+-- 统计网关总流量
+function _M.gateway_request_all(self)
+	incr(self,'gateway_flow_all',"match")
+end
 
 function _M.flush_all(self,rule)
 	local shareddict  = SHARED_NAMES[rule]

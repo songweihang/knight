@@ -1,6 +1,3 @@
-lua_shared_dict knightConf 1m;
-lua_shared_dict knightConfLock 100k;
-
 lua_shared_dict stats_all_keys 2m;
 lua_shared_dict stats_match_keys 1m;
 lua_shared_dict stats_all_key_lock 2m;
@@ -23,15 +20,3 @@ lua_shared_dict stats_match_fail_time 1m;
 lua_shared_dict stats_match_success_upstream_time 1m;
 lua_shared_dict stats_match_fail_upstream_time 1m;
 lua_shared_dict stats_match_bytes_sent 1m;
-
-#灰度分流
-lua_shared_dict api_lb_sysConfig 1m;
-lua_shared_dict kv_api_lb_upstream 10m;
-
-#错误日志写入保护限流
-lua_shared_dict log_write_limit 100k;
-
-#限流
-lua_shared_dict imit_conf 1m;
-lua_shared_dict my_limit_req_store 10m;
-lua_shared_dict my_limit_conn_store 1m;

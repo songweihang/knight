@@ -1,24 +1,7 @@
-local redis = require "apps.lib.redis"
-
-local handler
-
---第一个参数为premature
-function handler(premature, params)
-    local red = redis:new()
-    
-    local cjson = require('cjson.safe')
-    local jencode = cjson.encode
-    local stats = require "apps.lib.stats"
-    local stats_center = stats:new()
-    local keys = stats_center:read_key_lists('match')
-
-	--递归
-	local ok, err = ngx.timer.at(5, handler, "params-data")
-	ngx.log(ngx.DEBUG, "ok:", ok, " err:", err)
-end
-
+local stats       = require "apps.lib.stats"
+local system_conf = require "config.init"
 --第一个nginx worker 执行redis操作
-if ngx.worker.id() == 0 then
-	local ok, err = ngx.timer.at(5, handler, "params-data")
-	ngx.log(ngx.DEBUG, "ok:", ok, " err:", err)
+if ngx.worker.id() == 1 then
+    local ok, err = stats:timer_at_redis('match',system_conf.redisConf)
+    ngx.log(ngx.ERR, "timer_at run worker:",ngx.worker.id())
 end
