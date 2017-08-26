@@ -20,3 +20,5 @@ lua_shared_dict stats_match_fail_time 1m;
 lua_shared_dict stats_match_success_upstream_time 1m;
 lua_shared_dict stats_match_fail_upstream_time 1m;
 lua_shared_dict stats_match_bytes_sent 1m;
+
+lua_shared_dict denycc_conf 1m;
