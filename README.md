@@ -8,9 +8,6 @@ knight是基于 [openresty](https://openresty.org) 开发的集群api统计、cc
     lua_code_cache on;
     lua_check_client_abort on;
     
-    lua_shared_dict cache 5m;
-    lua_shared_dict cache_locks 5m;
-    
     lua_max_pending_timers 1024;
     lua_max_running_timers 256;
     include /home/wwwroot/servers/knight/config/lua.shared.dict;
@@ -58,12 +55,13 @@ knight/config/init.lua 中进行服务配置
 cc模块默认关闭，可以通过接口进行开启服务
 
     获取cc防御配置 GET http://knight.domian.cn/admin/denycc/get
-    修改cc防御配置 GET http://knight.domian.cn/admin/denycc/store?参数denycc_switch=0&denycc_rate_request=501&denycc_rate_ts=60
-    参数:denycc_switch 0关闭 1开启
-    denycc_rate_ts cc统计周期默认60秒不建议修改  denycc_rate_request denycc_rate_ts时间内单ip执行最大次数
+    修改cc防御配置 GET http://knight.domian.cn/admin/denycc/store?denycc_switch=0&denycc_rate_request=501&denycc_rate_ts=60
+    denycc_switch 0关闭 1开启
+    denycc_rate_ts cc统计周期默认60秒不建议修改  
+    denycc_rate_request denycc_rate_ts时间内单ip执行最大次数
     可以在knight/config/init.lua中whitelist_ips配置cc白名单，whitelist_ips会自动绕开cc限制，默认配置所有内网地址均加入白名单
 
 
 ### License
 
-[MIT](./LICENSE)    
+MIT    
