@@ -7,13 +7,13 @@ local denycc_conf = ngxshared.denycc_conf
 _M._VERSION = '0.1'
 
 _M.redisConf = {
-    ["uds"]      = '/tmp/redis.sock',
+    ["uds"]      = nil,
     ["host"]     = '127.0.0.1',
     ["port"]     = '6379',
-    ["poolsize"] = 1000,
+    ["poolsize"] = 2000,
     ["idletime"] = 90000, 
-    ["timeout"]  = 10000,
-    ["dbid"]     = 1,
+    ["timeout"]  = 1000,
+    ["dbid"]     = 0,
     ["auth"]     = ''
 }
 

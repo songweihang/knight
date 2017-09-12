@@ -55,7 +55,8 @@ _M.denycc_run = function()
         ngx.log(ngx.ERR, "denycc ip: ", ip)
         return
     else
-        ngx.header["NGX-DENYCC-HIT"] = hit
+        --ngx.header["Content-Type"] = "text/html; charset=UTF-8"
+        --ngx.header["NGX-DENYCC-HIT"] = hit
         --ngx.say(limit .. ":" .. hit)    
     end
 end

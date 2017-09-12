@@ -50,7 +50,7 @@ local jencode = cjson.encode
 
 local system_conf = require "config.init"
 local redis_conf  = system_conf.redisConf
-local redis = require "resty.redis"
+local redis = require "apps.resty.redis"
 local red = redis:new()
 
 red:set_timeout(redis_conf['timeout']) -- 1 sec

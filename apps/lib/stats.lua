@@ -257,7 +257,7 @@ end
 
 -- 把nginx访问数据刷入redis当中
 local function dump_redis(premature,rule,redis_conf)
-	local redis = require "resty.redis"
+	local redis = require "apps.resty.redis"
     local red = redis:new()
 
     red:set_timeout(redis_conf['timeout']) -- 1 sec

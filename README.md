@@ -2,7 +2,7 @@
 knight是基于 [openresty](https://openresty.org) 开发的集群api统计、cc防御模块
 
 ### 安装
-在nginx.conf添加,knight放路径可以根据实际情况进行调整
+如下是nginx.conf的最小配置 实际knight放路径可以根据实际情况进行调整
 
     lua_package_path "/home/wwwroot/servers/knight/?.lua;;";
     lua_code_cache on;
@@ -38,9 +38,9 @@ knight是基于 [openresty](https://openresty.org) 开发的集群api统计、cc
 
 knight/config/init.lua 中进行服务配置
 
-    如果需要持久化保存api统计数据，或者需要集群化部署可以配置 _M.redisConf的Redis服务地址
-    如果不需要持久化可以把可以屏蔽 init_worker_by_lua_file
-    你需要统计的api 则需要配置 _M.stats_match_conf 中的正则表达式
+    如果需要持久化数据api或者集群化部署可以配置 _M.redisConf的Redis服务地址
+    如果不需要持久化可以把可以屏蔽 init_worker_by_lua_file 默认会采用nginx共享内存实现统计
+    需要统计的API规则可以在_M.stats_match_conf中使用正则表达式进行配置
     
 ### 数据获取
     
@@ -52,7 +52,7 @@ knight/config/init.lua 中进行服务配置
     [{"success_time_avg":"3.52","flow_all":"219311.76","fail":45542,"flow_avg":"0.41","success_upstream_time":1314682.3707269,"fail_upstream_time_avg":"3.52","fail_time_avg":"5.46","success_ratio":"99.992","fail_time":248548.99999993,"success_time":1917575642.5463,"total":544744593,"success_upstream_time_avg":"2.41","api":"knightapi-\/v1\/answer\/"}]
     
 ### 如何使用cc防御模块
-cc模块默认关闭，可以通过接口进行开启服务
+cc模块默认关闭 可以通过接口进行开启服务
 
     获取cc防御配置 GET http://knight.domian.cn/admin/denycc/get
     修改cc防御配置 GET http://knight.domian.cn/admin/denycc/store?denycc_switch=0&denycc_rate_request=501&denycc_rate_ts=60

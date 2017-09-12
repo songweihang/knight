@@ -7,6 +7,8 @@ local system_conf       = require "config.init"
 local denycc_rate_conf  = system_conf.denycc_rate_conf
 local ngxshared         = ngx.shared
 local denycc_conf       = ngxshared.denycc_conf
+local redis_conf        = system_conf.redisConf
+local cache             = require "apps.resty.cache"
 
 local GET,method = nil,ngx.var.request_method
 ngx.req.read_body()
@@ -26,6 +28,18 @@ local denycc_rate_ts = tonumber(GET['denycc_rate_ts']) or denycc_rate_conf.ts
 denycc_conf:set('denycc_switch',denycc_switch)
 denycc_conf:set('denycc_rate_request',denycc_rate_request)
 denycc_conf:set('denycc_rate_ts',denycc_rate_ts)
+
+local red = cache:new(redis_conf)
+local ok, err = red:connectdb()
+if not ok then
+    return 
+end
+
+red.redis:set('denycc_switch',denycc_switch)
+red.redis:set('denycc_rate_request',denycc_rate_request)
+red.redis:set('denycc_rate_ts',denycc_rate_ts)
+
+red:keepalivedb()
 
 local config = {
     ["denycc_switch"] = denycc_switch,
