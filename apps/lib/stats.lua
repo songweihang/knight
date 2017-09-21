@@ -12,18 +12,6 @@ local SHARED_NAMES    = {}
 local timer_at        = ngx.timer.at
 local delay 		  = 5
 
-SHARED_NAMES['all'] = {
-	["lock"] = "stats_all_key_lock",
-	["keys"] = "stats_all_keys",
-	["total"] = "stats_all_total",
-	["fail"] = "stats_all_fail",
-	["success_time"] = "stats_all_success_time",
-	["fail_time"] = "stats_all_fail_time",
-	["success_upstream_time"] = "stats_all_success_upstream_time",
-	["fail_upstream_time"] = "stats_all_fail_upstream_time",
-	["bytes_sent"] = "stats_all_bytes_sent",
-}
-
 SHARED_NAMES['match'] = {
 	["lock"] = "stats_match_key_lock",
 	["keys"] = "stats_match_keys",
@@ -83,10 +71,9 @@ end
 
 
 function _M.new(self,uri,status,request_time,upstream_response_time,bytes_sent)
-	--assert(status >0 and uri >= 0 and request_time >0 and upstream_response_time > 0 and host >0 )
 	local self = {
 		uri = uri or "-",
-		status = tonumber(status) or 498,
+		status = tonumber(status) or 499,
 		request_time = request_time or 0,
 		upstream_response_time = tonumber(upstream_response_time) or 0,
 		bytes_sent = tonumber(bytes_sent) or 0,
@@ -106,7 +93,7 @@ local function incr(self,key,rule)
 	local status = self.status
 	local bytes_sent = self.bytes_sent
 	-- 忽略 499 客户端链接中断的数据 TODO 400 405 408 414 494  501
-	if status == 498 then
+	if status == 499 then
 		return
 	end
 
@@ -257,20 +244,14 @@ end
 
 -- 把nginx访问数据刷入redis当中
 local function dump_redis(premature,rule,redis_conf)
-	local redis = require "apps.resty.redis"
-    local red = redis:new()
+	local cache = require "apps.resty.cache"
 
-    red:set_timeout(redis_conf['timeout']) -- 1 sec
-
-    local ok, err = red:connect(redis_conf['host'], redis_conf['port'])
+    local red = cache:new(redis_conf)
+    local ok, err = red:connectdb()
     if not ok then
-        ngx.log(ngx.ERR, "failed to connect: ", err)
-        return
-    else
-    	if redis_conf['auth'] ~= nil then
-    	    red:auth(redis_conf['auth'])
-    	end
-    	red:select(redis_conf['dbid'])    
+    	ngx.log(ngx.ERR, "timer_at ERROR ",err)
+    	timer_at(delay,dump_redis,rule,redis_conf)
+        return 
     end
 
 	local shareddict = SHARED_NAMES[rule]
@@ -291,16 +272,16 @@ local function dump_redis(premature,rule,redis_conf)
 			_flush_key(key,rule)
 		else
 			key = 'knightapi-' .. key
-			red:init_pipeline()
+			red.redis:init_pipeline()
 			--写入redis
-    		red:hincrbyfloat(key,'total',total)
-    		red:hincrbyfloat(key,'fail',fail)
-    		red:hincrbyfloat(key,'success_time',success_time)
-    		red:hincrbyfloat(key,'fail_time',fail_time)
-    		red:hincrbyfloat(key,'success_upstream_time',success_upstream_time)
-    		red:hincrbyfloat(key,'fail_upstream_time',fail_upstream_time)
-    		red:hincrbyfloat(key,'bytes_sent',bytes_sent)
-    		local results, err = red:commit_pipeline()
+    		red.redis:hincrbyfloat(key,'total',total)
+    		red.redis:hincrbyfloat(key,'fail',fail)
+    		red.redis:hincrbyfloat(key,'success_time',success_time)
+    		red.redis:hincrbyfloat(key,'fail_time',fail_time)
+    		red.redis:hincrbyfloat(key,'success_upstream_time',success_upstream_time)
+    		red.redis:hincrbyfloat(key,'fail_upstream_time',fail_upstream_time)
+    		red.redis:hincrbyfloat(key,'bytes_sent',bytes_sent)
+    		local results, err = red.redis:commit_pipeline()
             if not results then
                 ngx.log(ngx.ERR,"failed to commit the pipelined requests: ", err)
                 return
@@ -310,15 +291,9 @@ local function dump_redis(premature,rule,redis_conf)
 	-- 清理ngxshared[rule]的数据
 	_M.flush_all(self,rule)
 
-	local ok, err = red:set_keepalive(redis_conf['idletime'], redis_conf['poolsize'])
-    if not ok then
-        ngx.log(ngx.ERR, "failed to set keepalive: ", err)
-        return
-    end
-
-    timer_at(delay,dump_redis,rule,redis_conf)
-
+	red:keepalivedb()
     ngx.log(ngx.ERR, "timer_at ing...",delay)
+    timer_at(delay,dump_redis,rule,redis_conf)
 end
 
 --执行redis写入任务

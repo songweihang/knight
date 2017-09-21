@@ -1,8 +1,6 @@
 local system_conf                   = require "config.init"
 local stats_main_conf               = system_conf.stats_main_conf
 local stats_match_conf              = system_conf.stats_match_conf
-local stats_all_conf				= system_conf.stats_all_conf
-local stats_all_switch              = system_conf.stats_all_switch
 local stats_match_switch            = system_conf.stats_match_switch
 
 local status                        = ngx.var.status or 499
