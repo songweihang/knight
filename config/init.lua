@@ -17,11 +17,8 @@ _M.redisConf = {
     ["auth"]     = ''
 }
 
-_M.stats_all_switch    = false
-
-_M.stats_all_conf = {
-    {["switch"]=false,["limit"]=false,["host"]="a.domain.cn"}
-}
+-- 是否把API统计刷入REDIS中
+_M.stats_redis_dump_switch  = true
 
 _M.stats_match_switch  = true
 
