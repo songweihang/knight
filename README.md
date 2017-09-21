@@ -36,16 +36,42 @@ knight是基于 [openresty](https://openresty.org) 开发的集群API统计、CC
     
 ### 服务配置与使用
 
-knight/config/init.lua 中进行服务配置
+knight/config/init.lua 服务配置说明
+    
+    -- redis 服务配置
+    _M.redisConf = {
+        ["uds"]      = nil,
+        ["host"]     = '127.0.0.1',
+        ["port"]     = '6379',
+        ["poolsize"] = 2000,
+        ["idletime"] = 90000, 
+        ["timeout"]  = 1000,
+        ["dbid"]     = 0,
+        ["auth"]     = ''
+    }
 
-    如果需要持久化数据API或者集群化部署可以配置 _M.redisConf的Redis服务地址
-    如果不需要持久化可以把可以屏蔽 init_worker_by_lua_file 默认会采用nginx共享内存实现统计
-    需要统计的API规则可以在_M.stats_match_conf中使用正则表达式进行配置
+    -- 是否把API统计刷入REDIS中，如果集群nginx建议开启
+    _M.stats_redis_dump_switch  = true
+    -- 是否开启API统计
+    _M.stats_match_switch  = true
+    -- API统计正则规则
+    _M.stats_match_conf = {
+        {["host"]="b.domain.cn",["match"]="\\/api\\/v\\d+\\/[\\/a-zA-Z]+",["switch"]=true,["limit"]=0},
+        {["host"]="a.domain.cn",["match"]="\\/v\\d+\\/[\\/a-zA-Z_-]+",["switch"]=true,["limit"]=0},
+        {["host"]="c.domain.cn",["match"]="\\/v\\d+\\/[\\/a-zA-Z_-]+",["switch"]=true,["limit"]=0}
+    }
+    -- 设置白名单
+    _M.whitelist_ips = {
+          "127.0.0.1",
+          "10.0.0.0/8",
+          "172.16.0.0/12",
+          "192.168.0.0/16",
+    }
     
 ### 数据获取
     
     开启集群 获取数据方式 GET http://knight.domian.cn/admin/stats/get
-    未开启   GET http://knight.domian.cn/admin/stats/loadGet
+    未开启stats_redis_dump_switch GET http://knight.domian.cn/admin/stats/loadGet
     
 ### 数据格式
     
