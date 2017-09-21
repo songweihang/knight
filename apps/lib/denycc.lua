@@ -11,6 +11,7 @@ local redis_conf             = system_conf.redisConf
 local denycc_rate_conf       = system_conf.denycc_rate_conf
 local ngxshared              = ngx.shared
 local denycc_conf            = ngxshared.denycc_conf
+local cache                  = require "apps.resty.cache"
 
 _M.denycc_run = function()
     local denycc_rate_ts         = denycc_conf:get('denycc_rate_ts') or denycc_rate_conf.ts
@@ -20,33 +21,19 @@ _M.denycc_run = function()
     local ts                     = math.ceil(ngx.time()/denycc_rate_ts)
     local limit                  = 'LIMIT:' .. ip .. ':' .. ts
 
-    local redis = require "apps.resty.redis"
-    local red = redis:new()
-
-    red:set_timeout(redis_conf['timeout']) -- 1 sec
-
-    local ok, err = red:connect(redis_conf['host'], redis_conf['port'])
+    local red = cache:new(redis_conf)
+    local ok, err = red:connectdb()
     if not ok then
-        ngx.log(ngx.ERR, "failed to connect: ", err)
-        return
-    else
-        if redis_conf['auth'] ~= nil then
-            red:auth(redis_conf['auth'])
-        end
-        red:select(redis_conf['dbid'])    
+        return 
     end
 
-    local hit, err = red:incr(limit)
+    local hit, err = red.redis:incr(limit)
 
     if hit == 1 then
-        red:expire(limit,denycc_rate_ts)
+        red.redis:expire(limit,denycc_rate_ts)
     end
-
-    local ok, err = red:set_keepalive(redis_conf['idletime'], redis_conf['poolsize'])
-    if not ok then
-        ngx.log(ngx.ERR, "failed to set keepalive: ", err)
-        return
-    end
+    
+    red:keepalivedb()
 
     if hit >= denycc_rate_request then
         ngx.header["Content-Type"] = "text/html; charset=UTF-8"
