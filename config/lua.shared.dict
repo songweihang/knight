@@ -11,3 +11,6 @@ lua_shared_dict stats_match_bytes_sent 1m;
 
 #CC防御配置
 lua_shared_dict denycc_conf 1m;
+
+#ip黑名单
+lua_shared_dict ip_blacklist_conf 1m;
