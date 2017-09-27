@@ -26,12 +26,6 @@ knight是基于 [openresty](https://openresty.org) 开发的集群API统计、CC
             set $path $1;
             content_by_lua_file '/home/wwwroot/servers/knight/admin/$path.lua'; 
         }
-            
-        location = /favicon.ico {
-                deny all;
-                log_not_found off;
-                access_log off;
-        }
     }
     
 ### 服务配置与使用
@@ -82,16 +76,21 @@ knight/config/init.lua 服务配置说明
 
 ![](https://github.com/songweihang/ngx-lua-knight/blob/master/doc/img/%E7%BD%91%E5%85%B3%E6%9C%8D%E5%8A%A1%E6%B5%81%E9%87%8F%E8%B5%B0%E5%8A%BF%E5%9B%BE.png?raw=true)
 
-### 如何使用cc防御模块
-cc模块默认关闭 可以通过接口进行开启服务
+### 如何使用CC防御模块
+CC模块默认关闭 可以通过接口进行开启服务
 
     获取cc防御配置 GET http://knight.domian.cn/admin/denycc/get
     修改cc防御配置 GET http://knight.domian.cn/admin/denycc/store?denycc_switch=0&denycc_rate_request=501&denycc_rate_ts=60
     denycc_switch 0关闭 1开启
     denycc_rate_ts cc统计周期默认60秒不建议修改  
     denycc_rate_request denycc_rate_ts时间内单ip执行最大次数
-    可以在knight/config/init.lua中whitelist_ips配置cc白名单，whitelist_ips会自动绕开cc限制，默认配置所有内网地址均加入白名单
-
+    可以在knight/config/init.lua中whitelist_ips配置CC白名单，whitelist_ips会自动绕开CC限制，默认配置所有内网地址均加入白名单
+    
+如果遇到大量恶意请求系统也可以调用API封IP
+    
+    获取IP黑名单列表 GET  http://knight.domian.cn/admin/ip_blacklist/lists
+    设置IP黑名单    GET  http://knight.domian.cn/admin/ip_blacklist/store?ip=127.0.0.2
+    删除IP黑名单    GET  http://knight.domian.cn/admin/ip_blacklist/del?ip=127.0.0.2
 
 ### License
 
