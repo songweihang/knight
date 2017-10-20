@@ -1,0 +1,104 @@
+abtest:upstream:default
+[
+    {
+        "ip": "127.0.0.1",
+        "port": 8080,
+        'weight':10
+    },
+    {
+        "ip": "127.0.0.1",
+        "port": 8080,
+        "weight":5
+    }
+]
+
+abtest:upstream:appoint:\d+
+
+IP分流规则
+{
+    "divtype": "iprange",
+    "divdata": [
+        {
+            "range": {
+                "start": 1111,
+                "end": 2222
+            },
+            "upstream": {
+                "ip": "127.0.0.1",
+                "port": 8080
+            }
+        },
+        {
+            "range": {
+                "start": 1111,
+                "end": 2222
+            },
+            "upstream": {
+                "ip": "127.0.0.1",
+                "port": 8080
+            }
+        }
+    ]
+}
+
+用户UID分流规则
+{
+    "divtype": "uidrange",
+    "divdata": [
+        {
+            "range": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "upstream": {
+                "ip": "127.0.0.1",
+                "port": 8080
+            }
+        },
+        {
+            "range": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "upstream": {
+                "ip": "127.0.0.1",
+                "port": 8080
+            }
+        }
+    ]
+}
+
+用户upstream缓存key 根据domian划分
+abtest:user:upstream:[domain]:[rangeid]
+{
+    "ip": '127.0.0.1',
+    "port":8080
+}
+
+该域名是否存在分流规则
+abtest:upstream:[domain] 分流id
+
+
+
+请求
+|
+|
+v                      否
+判断域名是否存在分流规则 -----> upstream default
+|
+|  是
+|
+v                       
+判断用户缓存是否存在   -----> 存在直接读取                         
+|                               |
+|                               |
+|                               |
+v                               v
+加锁计算分流规则写入缓存 ----->  upstream 
+

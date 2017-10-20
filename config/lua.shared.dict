@@ -14,3 +14,6 @@ lua_shared_dict denycc_conf 1m;
 
 #ip黑名单
 lua_shared_dict ip_blacklist_conf 1m;
+
+#灰度发布系统
+lua_shared_dict abtest 1m;
