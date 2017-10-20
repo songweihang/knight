@@ -46,7 +46,7 @@ local function set_conf(premature,redis_conf)
         ngxshared['ip_blacklist_conf']:flush_all();
         for index, banned_ip in ipairs(ip_blacklist) do
             local cache_banned_ip = 'banned_ip:' .. banned_ip
-            ngx_log(ngx.ERR, "failed to query cache_banned_ip:" .. cache_banned_ip);
+            --ngx_log(ngx.ERR, "failed to query cache_banned_ip:" .. cache_banned_ip);
             set_shared_value('ip_blacklist_conf',cache_banned_ip,1)
         end
     end

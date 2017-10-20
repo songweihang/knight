@@ -24,7 +24,13 @@ _M.denycc_run = function()
     local ts                     = math.ceil(ngx.time()/denycc_rate_ts)
     local limit                  = string_format("LIMIT:%s:%s", ip, ts)
 
-    _M.rate_limit(limit,denycc_rate_ts,denycc_rate_request)
+    local ok, hit = _M.rate_limit(limit,denycc_rate_ts,denycc_rate_request)
+    if ok then
+        ngx_log(ngx.ERR, "denycc ip: ", ip)
+        ngx.header["Content-Type"] = "text/html; charset=UTF-8"
+        ngx.header["NGX-DENYCC-HIT"] = hit
+        ngx.exit(429)
+    end
 end
 
 _M.rate_limit = function(limit,denycc_rate_ts,denycc_rate_request)
@@ -61,16 +67,9 @@ _M.rate_limit = function(limit,denycc_rate_ts,denycc_rate_request)
     red:keepalivedb()
 
     if tonumber(hit) >= denycc_rate_request then
-        -- return ngx.exit(ngx.HTTP_FORBIDDEN);
-        ngx.header["Content-Type"] = "text/html; charset=UTF-8"
-        ngx.header["NGX-DENYCC-HIT"] = hit
-        ngx.exit(429)
-        ngx_log(ngx.ERR, "denycc ip: ", ip)
-        return
+        return true,hit
     else
-        --ngx.header["Content-Type"] = "text/html; charset=UTF-8"
-        --ngx.header["NGX-DENYCC-HIT"] = hit
-        --ngx.say(limit .. ":" .. hit)    
+        return nil,hit
     end
 end
 

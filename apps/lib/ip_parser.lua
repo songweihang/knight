@@ -58,4 +58,13 @@ _M.get = function()
 end
 
 
+_M.get_ip2long = function()
+    local ClientIP = _M.get()
+    if ClientIP then 
+        ClientIP = ip2long(ClientIP)
+    end
+    return ClientIP
+end
+
+
 return _M
