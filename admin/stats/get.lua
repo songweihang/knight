@@ -1,5 +1,4 @@
 ngx.header["Content-Type"] = "application/json;charset=UTF-8"
-ngx.header["Access-Control-Allow-Origin"] = "*"
 
 local strformat = string.format
 local tonumber  = tonumber

@@ -11,21 +11,15 @@ local args,method    = request:get()
 local appoint        = args['appoint'] or nil
 local appoint_id     = tonumber(args['appoint_id']) or nil
 
-local red = cache:new(redis_conf)
-local ok, err = red:connectdb()
-if not ok then
-    return 
-end
-
 -- 检查appoint是否符合规则
 if appoint then
     local appoint_table = cjson.decode(appoint)
     if type(appoint_table) ~= 'table' then
-        ngx.print('{"code":40001,"message":"ERROR: appoint is not a table"}')
+        ngx.print('{"code":40003,"message":"ERROR: appoint is not a table"}')
         return
     else
         if appoint_table.divtype ~= 'uidrange' and appoint_table.divtype ~= 'iprange' then
-            ngx.print('{"code":40002,"message":"ERROR: divtype in uidrange or iprange"}')
+            ngx.print('{"code":40003,"message":"ERROR: divtype in uidrange or iprange"}')
             return
         else
             if appoint_table.divtype == 'uidrange' then
@@ -49,6 +43,11 @@ if appoint then
     end
 end
 
+local red = cache:new(redis_conf)
+local ok, err = red:connectdb()
+if not ok then
+    return 
+end
 
 if method == 'GET' then
     if appoint_id then
@@ -63,12 +62,13 @@ if method == 'DELETE' then
         appoint ,_ = red.redis:del(AB_UPS_APPOINT .. appoint_id)
     end
 
-    ngx.print('{"code":0,"message":"Del upstream appoint"}') 
+    ngx.print('{"code":0,"message":"success"}') 
 end
 
 if method == 'POST' then
     if not appoint then
         ngx.print('{"code":40004,"message":"ERROR: appoint expected parameter for" }')
+        red:keepalivedb()
         return
     else
         if not appoint_id then
@@ -78,7 +78,7 @@ if method == 'POST' then
         red.redis:set(AB_UPS_APPOINT .. appoint_id,appoint)
     end
 
-    ngx.print('{"code":0,"message":"Save upstream appoint"}')    
+    ngx.print('{"appoint_id":' .. appoint_id .. '}')    
 end
 
 red:keepalivedb()

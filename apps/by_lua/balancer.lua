@@ -1,10 +1,8 @@
 local balancer          = require "ngx.balancer"
 local cjson             = require('cjson.safe')
 local ngx_log           = ngx.log
-local DEFAULT_UPSTREAM  = ngx.var.default_upstream or nil
-
-local abtestcore = require "apps.lib.abtest.core"
-local upstream = abtestcore:get_upstream()
+local abtestcore        = require "apps.lib.abtest.core"
+local upstream          = abtestcore:get_upstream()
 
 local host,port = nil,nil
 if not upstream then
@@ -12,10 +10,10 @@ if not upstream then
     local ups = abtestcore:get_default_upstream()
     if not ups then
         ngx.exit(503)
-        ngx.log(ngx.ERR, "DEFAULT UPSTREAM ERR: nil")
+        ngx_log(ngx.ERR, "DEFAULT UPSTREAM ERR: nil")
         return
     else
-        ngx.log(ngx.ERR, "DEFAULT_UPSTREAM ups: ", cjson.encode(ups))
+        ngx_log(ngx.ERR, "DEFAULT_UPSTREAM ups: ", cjson.encode(ups))
         host = ups['ip']
         port = ups['port']
     end

@@ -19,16 +19,13 @@ _M.check = function(self)
     if type(self.policy) ~= 'table' then
         return nil
     end
-
     for _, v in pairs(self.policy) do
         if type(v['upstream']) ~= 'table' then
             return nil
         end
-
         if not v['upstream']['ip'] or not v['upstream']['port'] then
             return nil
         end
-
         if type(v['range']) ~= 'table' then
             return nil
         else    
@@ -39,7 +36,6 @@ _M.check = function(self)
             end
         end
     end
-
     return true
 end
 

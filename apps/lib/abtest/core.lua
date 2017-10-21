@@ -73,7 +73,7 @@ local function generate_abtest_upstream_id(premature,host)
         ngxshared.abtest:delete('abtest:upstream:' .. host)
     end
 
-    ngxshared.abtest:set('abtest:upstream:lock:' .. host,1,3)
+    ngxshared.abtest:set('abtest:upstream:lock:' .. host,1,55)
 end
 
 
@@ -98,7 +98,7 @@ local function generate_abtest_default_upstream(premature,host,default_upstream_
         c:set('abtest:default:upstream:' .. host,default_upstream_conf)
     end
 
-    c:set('abtest:default:upstream:lock:' .. host,1,3)
+    c:set('abtest:default:upstream:lock:' .. host,1,60)
 end
 
 
@@ -123,7 +123,7 @@ local function generate_abtest_appoint(premature,upstream_id)
         c:delete('abtest:upstream:appoint:' .. upstream_id)
     end
 
-    c:set('abtest:upstream:appoint:lock:' .. upstream_id, 1,3)
+    c:set('abtest:upstream:appoint:lock:' .. upstream_id, 1,58)
 end
 
 

@@ -4,7 +4,6 @@ _M._VERSION = "0.1"
 
 local tonumber = tonumber
 
-
 _M.new = function(self,policy)
     self.policy = policy
     return setmetatable(self, mt)
@@ -18,29 +17,24 @@ _M.check = function(self)
     if type(self.policy) ~= 'table' then
         return nil
     end
-
     for _, v in pairs(self.policy) do
         if type(v['upstream']) ~= 'table' then
             return nil
         end
-
         if not v['upstream']['ip'] or not v['upstream']['port'] then
             return nil
         end
-
         if type(v['range']) ~= 'table' then
             return nil
         else
             if not tonumber(v['range']['start']) or not tonumber(v['range']['end']) then
                 return nil
             end
-
             if tonumber(v['range']['start']) > tonumber(v['range']['end']) then
                 return nil
             end
         end
     end
-
     return true
 end
 

@@ -1,3 +1,30 @@
+创建或者修改分流规则
+curl -X POST -d 'appoint_id=1&appoint={"divtype": "iprange","divdata": [{"range": {"start": 1111,"end": 2222},"upstream": {"ip": "127.0.0.1","port": 8080}},"upstream": {"ip": "127.0.0.1","port": 8080}}]}'  http://api.host.cn/admin/abtest/appoint
+
+根据appoint_id删除分流规则
+curl -X DELETE 'http://api.host.cn/admin/abtest/appoint?appoint_id=18'
+
+根据appoint_id获取分流规则
+curl -X GET 'http://api.host.cn/admin/abtest/appoint?appoint_id=18'
+
+设置host使用分流规则
+curl -X POST -d 'appoint_id=1&host=domain.host.cn'  http://api.host.cn/admin/abtest/upstream
+
+根据host删除分流规则
+curl -X DELETE 'http://api.host.cn/admin/abtest/upstream?host=domain.host.cn'
+
+根据host获取分流规则
+curl -X GET 'http://api.host.cn/admin/abtest/upstream?host=domain.host.cn'
+
+设置host的default分流规则
+curl -X POST -d 'host=domain.host.cn&appoint=[{"ip": "127.0.0.1","port": 8080,"weight":8},{"ip": "127.0.0.1","port": 8080,"weight":6}]'  http://api.host.cn/admin/abtest/upstream
+
+根据host获取default分流规则
+curl -X GET 'http://api.host.cn/admin/abtest/default?host=domain.host.cn'
+
+根据host删除default分流规则
+curl -X DELETE 'http://api.host.cn/admin/abtest/default?host=domain.host.cn'
+
 abtest:upstream:default
 [
     {
