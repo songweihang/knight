@@ -135,7 +135,7 @@ local get_upstream_id = function (host)
         local sema = semaphore.new()
         -- abtest upstream 读取规则失败 尝试在redis中获取
         -- step 2 semaphore lock
-        local sem, err = sema:wait(0.01)
+        local sem, err = sema:wait(0.05)
         if not sem then
             -- lock failed acquired
             -- but go on. This action just sets a fence 
@@ -161,7 +161,7 @@ local get_upstream_appoint = function (upstream_id)
         local sema = semaphore.new()
         -- abtest upstream 读取规则失败 尝试在redis中获取
         -- step 2 semaphore lock
-        local sem, err = sema:wait(0.01)
+        local sem, err = sema:wait(0.05)
         if not sem then
             -- lock failed acquired
             -- but go on. This action just sets a fence 
@@ -191,7 +191,7 @@ function _M.get_upstream()
     
     local upstream_appoint  = get_upstream_appoint(upstream_id)
     if type(upstream_appoint) == 'table' and type(upstream_appoint['divdata']) == 'table' then
-        ngx_log(ngx.ERR, "upstream_appoint: ", cjson.encode(upstream_appoint))
+        -- ngx_log(ngx.ERR, "upstream_appoint: ", cjson.encode(upstream_appoint))
         if upstream_appoint.divtype == 'uidrange' then
             local uua = uidappoint:new(upstream_appoint['divdata'])
             local upstream = uua:get_upstream(uidparser:get())
@@ -217,7 +217,7 @@ function _M.get_default_upstream()
         local sema = semaphore.new()
         -- abtest upstream 读取规则失败 尝试在redis中获取
         -- step 2 semaphore lock
-        local sem, err = sema:wait(0.01)
+        local sem, err = sema:wait(0.05)
         if not sem then
             -- lock failed acquired
             -- but go on. This action just sets a fence 
@@ -227,7 +227,9 @@ function _M.get_default_upstream()
         local default_upstream_lock = c:get("abtest:default:upstream:lock:" .. host)
         if not default_upstream_lock then
             -- step 4 读取redis获取数据
-            timer_at(0, generate_abtest_default_upstream,host,default_upstream)
+            if type(default_upstream) == 'table' then
+                timer_at(0, generate_abtest_default_upstream,host,default_upstream)
+            end
         end
 
         if sem then sema:post(1) end

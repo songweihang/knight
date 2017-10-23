@@ -52,8 +52,7 @@ _M.get_upstream = function(self, ip2long)
             end
         end
     end
-    ngx.log(ngx.ERR, "backend: policy default")
-    --return upstream
+    return nil
 end
 
 return _M

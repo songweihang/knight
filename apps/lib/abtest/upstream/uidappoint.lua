@@ -55,7 +55,6 @@ _M.get_upstream = function(self, uid)
             end
         end
     end
-    ngx_log(ngx.ERR, "backend: policy default")
     return nil
 end
 

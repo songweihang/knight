@@ -13,7 +13,7 @@ if not upstream then
         ngx_log(ngx.ERR, "DEFAULT UPSTREAM ERR: nil")
         return
     else
-        ngx_log(ngx.ERR, "DEFAULT_UPSTREAM ups: ", cjson.encode(ups))
+        -- ngx_log(ngx.ERR, "DEFAULT_UPSTREAM ups: ", cjson.encode(ups))
         host = ups['ip']
         port = ups['port']
     end
