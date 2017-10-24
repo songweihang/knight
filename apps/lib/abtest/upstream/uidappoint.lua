@@ -14,7 +14,6 @@ local isNULL = function(v)
     return v and v ~= ngx.null
 end
 
---  policy is in format as {{upstream = '192.132.23.125', uidset ={ 214214, 23421,12421} }, {}}
 _M.check = function(self)
     if type(self.policy) ~= 'table' then
         return nil
@@ -47,8 +46,8 @@ _M.get_upstream = function(self, uid)
             if type(v['range']) == 'table' then
                 for _, vv in pairs(v['range']) do
                     if tonumber(vv) == uid then
-                        ngx_log(ngx.ERR, "backend: policy " , v['upstream']['ip'])
-                        ngx_log(ngx.ERR, "backend: uid " , vv)
+                        --ngx_log(ngx.ERR, "backend: policy " , v['upstream']['ip'])
+                        --ngx_log(ngx.ERR, "backend: uid " , vv)
                         return v['upstream']
                     end
                 end

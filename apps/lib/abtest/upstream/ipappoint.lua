@@ -45,8 +45,8 @@ _M.get_upstream = function(self, ip2long)
         for _, v in pairs(self.policy) do 
             if type(v['range']) == 'table' and type(v['upstream']) == 'table' then
                 if ip2long >= v['range']['start'] and ip2long <= v['range']['end'] then
-                    ngx.log(ngx.ERR, "backend: policy " , v['upstream']['ip'])
-                    ngx.log(ngx.ERR, "backend: ip " , ip2long)
+                    --ngx.log(ngx.ERR, "backend: policy " , v['upstream']['ip'])
+                    --ngx.log(ngx.ERR, "backend: ip " , ip2long)
                     return v['upstream']
                 end
             end
