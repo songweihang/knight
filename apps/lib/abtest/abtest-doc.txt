@@ -1,12 +1,28 @@
-创建或者修改分流规则
+----------默认分流规则设置--------------
+设置host下的默认分流规则
+curl -X POST -d 'host=domain.host.cn&appoint=[{"ip": "127.0.0.1","port": 8080,"weight":8},{"ip": "127.0.0.1","port": 8080,"weight":6}]'  http://api.host.cn/admin/abtest/upstream
+
+根据host下的获取默认分流规则
+curl -X GET 'http://api.host.cn/admin/abtest/default?host=domain.host.cn'
+
+根据host删除默认分流规则
+curl -X DELETE 'http://api.host.cn/admin/abtest/default?host=domain.host.cn'
+
+
+
+----------分流策略规则设置--------------
+创建或者修改分流策略
 curl -X POST -d 'appoint_id=1&appoint={"divtype": "iprange","divdata": [{"range": {"start": 1111,"end": 2222},"upstream": {"ip": "127.0.0.1","port": 8080}},"upstream": {"ip": "127.0.0.1","port": 8080}}]}'  http://api.host.cn/admin/abtest/appoint
 
-根据appoint_id删除分流规则
-curl -X DELETE 'http://api.host.cn/admin/abtest/appoint?appoint_id=18'
-
-根据appoint_id获取分流规则
+根据appoint_id获取分流策略
 curl -X GET 'http://api.host.cn/admin/abtest/appoint?appoint_id=18'
 
+根据appoint_id删除分流策略
+curl -X DELETE 'http://api.host.cn/admin/abtest/appoint?appoint_id=18'
+
+
+
+----------默认分流规则设置--------------
 设置host使用分流规则
 curl -X POST -d 'appoint_id=1&host=domain.host.cn'  http://api.host.cn/admin/abtest/upstream
 
@@ -16,15 +32,13 @@ curl -X DELETE 'http://api.host.cn/admin/abtest/upstream?host=domain.host.cn'
 根据host获取分流规则
 curl -X GET 'http://api.host.cn/admin/abtest/upstream?host=domain.host.cn'
 
-设置host的default分流规则
-curl -X POST -d 'host=domain.host.cn&appoint=[{"ip": "127.0.0.1","port": 8080,"weight":8},{"ip": "127.0.0.1","port": 8080,"weight":6}]'  http://api.host.cn/admin/abtest/upstream
 
-根据host获取default分流规则
-curl -X GET 'http://api.host.cn/admin/abtest/default?host=domain.host.cn'
 
-根据host删除default分流规则
-curl -X DELETE 'http://api.host.cn/admin/abtest/default?host=domain.host.cn'
 
+该域名是否存在分流规则
+abtest:upstream:[domain] 分流id
+
+默认分流规则
 abtest:upstream:default
 [
     {
@@ -101,15 +115,6 @@ IP分流规则
     ]
 }
 
-用户upstream缓存key 根据domian划分
-abtest:user:upstream:[domain]:[rangeid]
-{
-    "ip": '127.0.0.1',
-    "port":8080
-}
-
-该域名是否存在分流规则
-abtest:upstream:[domain] 分流id
 
 
 
@@ -121,11 +126,15 @@ v                      否
 |
 |  是
 |
-v                       
-判断用户缓存是否存在   -----> 存在直接读取                         
-|                               |
-|                               |
-|                               |
-v                               v
-加锁计算分流规则写入缓存 ----->  upstream 
-
+v                       无
+根据分流ID获取分流规则 --------                           
+|                           |    
+|                           |    
+|                           |    
+v                           V   
+根据分流规则计算 -----> upstream default
+|
+|
+|
+v 
+灰度upstream
