@@ -1,3 +1,5 @@
+-- Copyright (C) 2016-2017 WeiHang Song (Jakin)
+
 local ipappoint         = require "apps.lib.abtest.upstream.ipappoint"
 local uidappoint        = require "apps.lib.abtest.upstream.uidappoint"
 local uidparser         = require "apps.lib.abtest.userinfo.uidparser"
@@ -13,11 +15,17 @@ local tonumber          = tonumber
 local type              = type
 local timer_at          = ngx.timer.at
 local ngxshared         = ngx.shared
+local math_random       = math.random
 
 
 local _M    = {}
 local mt    = { __index = _M }
 _M._VERSION = "0.1"
+
+local DEFAULT_UPSTREAM_LOCK_WAIT = math_random(50,60)
+local UPSTREAM_LOCK_WAIT         = math_random(50,60)
+local UPSTREAM_APPOINT_LOCK_WAIT = math_random(50,60)
+local SEMA_WAIT                  = 0.01
 
 
 local get_host = function ()
@@ -38,7 +46,7 @@ local upstream_weight_shunt = function (upstream)
             table.insert(tempdata,v)
         end
     end
-    local index = math.random(1, weight);
+    local index = math_random(1, weight);
     return tempdata[index];
 end
 
@@ -72,8 +80,7 @@ local function generate_abtest_upstream_id(premature,host)
     else
         ngxshared.abtest:delete('abtest:upstream:' .. host)
     end
-
-    ngxshared.abtest:set('abtest:upstream:lock:' .. host,1,55)
+    --ngx_log(ngx.ERR, "generate_abtest_upstream_id")
 end
 
 
@@ -81,6 +88,8 @@ local function generate_abtest_default_upstream(premature,host,default_upstream_
     local red = cache:new(redis_conf)
     local ok, err = red:connectdb()
     if not ok then
+        -- 无法连接redis 写入默认upstream
+        c:set('abtest:default:upstream:' .. host,default_upstream_conf)
         return 
     end
 
@@ -97,8 +106,7 @@ local function generate_abtest_default_upstream(premature,host,default_upstream_
     else
         c:set('abtest:default:upstream:' .. host,default_upstream_conf)
     end
-
-    c:set('abtest:default:upstream:lock:' .. host,1,60)
+    --ngx_log(ngx.ERR, "generate_abtest_default_upstream") 
 end
 
 
@@ -122,8 +130,7 @@ local function generate_abtest_appoint(premature,upstream_id)
     else
         c:delete('abtest:upstream:appoint:' .. upstream_id)
     end
-
-    c:set('abtest:upstream:appoint:lock:' .. upstream_id, 1,58)
+    --ngx_log(ngx.ERR, "generate_abtest_appoint")
 end
 
 
@@ -135,7 +142,7 @@ local get_upstream_id = function (host)
         local sema = semaphore.new()
         -- abtest upstream 读取规则失败 尝试在redis中获取
         -- step 2 semaphore lock
-        local sem, err = sema:wait(0.05)
+        local sem, err = sema:wait(SEMA_WAIT)
         if not sem then
             -- lock failed acquired
             -- but go on. This action just sets a fence 
@@ -146,6 +153,7 @@ local get_upstream_id = function (host)
         if not upstream_lock then
             -- step 4 读取redis获取数据
             timer_at(0, generate_abtest_upstream_id,host)
+            ngxshared.abtest:set('abtest:upstream:lock:' .. host,1,UPSTREAM_LOCK_WAIT)
         end
 
         if sem then sema:post(1) end
@@ -161,7 +169,7 @@ local get_upstream_appoint = function (upstream_id)
         local sema = semaphore.new()
         -- abtest upstream 读取规则失败 尝试在redis中获取
         -- step 2 semaphore lock
-        local sem, err = sema:wait(0.05)
+        local sem, err = sema:wait(SEMA_WAIT)
         if not sem then
             -- lock failed acquired
             -- but go on. This action just sets a fence 
@@ -172,6 +180,7 @@ local get_upstream_appoint = function (upstream_id)
         if not upstream_appoint_lock then
             -- step 4 读取redis获取数据
             timer_at(0, generate_abtest_appoint,upstream_id)
+            c:set('abtest:upstream:appoint:lock:' .. upstream_id, 1,UPSTREAM_APPOINT_LOCK_WAIT)
         end
 
         if sem then sema:post(1) end
@@ -217,7 +226,7 @@ function _M.get_default_upstream()
         local sema = semaphore.new()
         -- abtest upstream 读取规则失败 尝试在redis中获取
         -- step 2 semaphore lock
-        local sem, err = sema:wait(0.05)
+        local sem, err = sema:wait(SEMA_WAIT)
         if not sem then
             -- lock failed acquired
             -- but go on. This action just sets a fence 
@@ -229,18 +238,25 @@ function _M.get_default_upstream()
             -- step 4 读取redis获取数据
             if type(default_upstream) == 'table' then
                 timer_at(0, generate_abtest_default_upstream,host,default_upstream)
+                c:set('abtest:default:upstream:lock:' .. host,1,DEFAULT_UPSTREAM_LOCK_WAIT)
             end
         end
-
         if sem then sema:post(1) end
     end
 
     local default_upstream_cache = c:get("abtest:default:upstream:" .. host)
-    default_upstream = default_upstream_cache or default_upstream
+    -- default_upstream = default_upstream_cache or default_upstream
+    if default_upstream_cache then
+        default_upstream = default_upstream_cache            
+    end
+    if type(default_upstream) ~= 'table' then
+        default_upstream  = cjson.decode(default_upstream)
+    end
     if default_upstream then
         local upstream = upstream_weight_shunt(default_upstream)
         return upstream
     end
+
     return nil
 end
 
