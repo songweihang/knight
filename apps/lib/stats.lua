@@ -11,6 +11,7 @@ local error           = error
 local SHARED_NAMES    = {}
 local timer_at        = ngx.timer.at
 local delay 		  = 5
+local ngx_log 		  = ngx.log
 
 SHARED_NAMES['match'] = {
 	["lock"] = "stats_match_key_lock",
@@ -242,22 +243,20 @@ function _M.read_key_lists(self,rule)
 	return lists
 end
 
+
 -- 把nginx访问数据刷入redis当中
 local function dump_redis(premature,rule,redis_conf)
 	local cache = require "apps.resty.cache"
-
     local red = cache:new(redis_conf)
     local ok, err = red:connectdb()
     if not ok then
-    	ngx.log(ngx.ERR, "timer_at ERROR ",err)
+    	ngx_log(ngx.ERR, "timer_at dump_redis ERROR :",err)
     	timer_at(delay,dump_redis,rule,redis_conf)
         return 
     end
 
 	local shareddict = SHARED_NAMES[rule]
-
 	local keys,lists = ngxshared[shareddict.keys]:get_keys(0),{}
-
 	for i, key in ipairs(keys) do
 		local total = ngxshared[shareddict.total]:get(key)
 		local fail = ngxshared[shareddict.fail]:get(key)
@@ -283,41 +282,40 @@ local function dump_redis(premature,rule,redis_conf)
     		red.redis:hincrbyfloat(key,'bytes_sent',bytes_sent)
     		local results, err = red.redis:commit_pipeline()
             if not results then
-                ngx.log(ngx.ERR,"failed to commit the pipelined requests: ", err)
+                ngx_log(ngx.ERR,"failed to commit the pipelined requests: ", err)
                 return
             end
 		end
 	end
 	-- 清理ngxshared[rule]的数据
 	_M.flush_all(self,rule)
-
 	red:keepalivedb()
-    ngx.log(ngx.ERR, "timer_at ing...",delay)
+    ngx_log(ngx.INFO, "timer_at ing...",delay)
     timer_at(delay,dump_redis,rule,redis_conf)
 end
+
 
 --执行redis写入任务
 function _M.timer_at_redis(self,rule,redis_conf)
 	local ok, err = timer_at(delay,dump_redis,rule,redis_conf)
-
 	if not ok then
-        ngx.log(ngx.ERR, "failed to create timer: ", err)
+        ngx_log(ngx.ERR, "failed to create timer: ", err)
         return
     end
 end
+
 
 -- 统计网关总流量
 function _M.gateway_request_all(self)
 	incr(self,'gateway_flow_all',"match")
 end
 
+
 function _M.flush_all(self,rule)
 	local shareddict  = SHARED_NAMES[rule]
-
 	if shareddict == nil then
 		error('not rule initialized')
 	end
-
 	ngxshared[shareddict.lock]:flush_all()
 	ngxshared[shareddict.keys]:flush_all()
 	ngxshared[shareddict.total]:flush_all()

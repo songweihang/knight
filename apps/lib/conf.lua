@@ -28,7 +28,7 @@ local function set_conf(premature,redis_conf)
     local red = cache:new(redis_conf)
     local ok, err = red:connectdb()
     if not ok then
-        ngx_log(ngx.ERR, "set_conf timer_at ERROR ",err)
+        ngx_log(ngx.ERR, "set_conf timer_at ERROR :",err)
         timer_at(delay,set_conf,redis_conf)
         return 
     end
@@ -52,7 +52,7 @@ local function set_conf(premature,redis_conf)
     end
 
     red:keepalivedb()
-    ngx_log(ngx.ERR, "set_conf timer_at ing...",delay)
+    ngx_log(ngx.INFO, "set_conf timer_at ing...",delay)
     timer_at(delay,set_conf,redis_conf)
 end
 
