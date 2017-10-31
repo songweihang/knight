@@ -19,7 +19,7 @@ uint32_t htonl(uint32_t hostlong);
 
 local C = ffi.C
 
-local ip2long = function(ip)
+function _M.ip2long(ip)
     local inp = ffi.new("struct in_addr[1]")
     if C.inet_aton(ip, inp) ~= 0 then
         return tonumber(C.ntohl(inp[0].s_addr))
@@ -27,7 +27,8 @@ local ip2long = function(ip)
     return nil
 end
 
-local long2ip = function(long)
+
+function _M.long2ip(long)
     if type(long) ~= "number" then
         return nil
     end
@@ -61,7 +62,7 @@ end
 _M.get_ip2long = function()
     local ClientIP = _M.get()
     if ClientIP then 
-        ClientIP = ip2long(ClientIP)
+        ClientIP = _M.ip2long(ClientIP)
     end
     return ClientIP
 end

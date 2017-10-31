@@ -6,6 +6,10 @@ local ipappoint         = require "apps.lib.abtest.upstream.ipappoint"
 local uidappoint        = require "apps.lib.abtest.upstream.uidappoint"
 local request           = require "apps.lib.request"
 
+local is_null = function(v)
+    return v and v ~= ngx.null
+end
+
 local AB_UPS_APPOINT = "abtest:upstream:appoint:"
 local args,method    = request:get()
 local appoint        = args['appoint'] or nil
@@ -38,6 +42,8 @@ if appoint then
                     ngx.print('{"code":40003,"message":"ERROR: appoint expected parameter for" }')
                     return
                 end
+                appoint_table['divdata'] = check
+                appoint = cjson.encode(appoint_table)
             end    
         end
     end
@@ -52,6 +58,17 @@ end
 if method == 'GET' then
     if appoint_id then
         appoint ,_ = red.redis:get(AB_UPS_APPOINT .. appoint_id)
+        if is_null(appoint) then
+            local appoint_table = cjson.decode(appoint)
+            local uua = ipappoint:new(appoint_table['divdata'])
+            local reduction = uua:reduction()
+            if not reduction then
+                ngx.print('{"code":40003,"message":"ERROR: appoint expected parameter for" }')
+                return
+            end
+            appoint_table['divdata'] = reduction
+            appoint = cjson.encode(appoint_table)
+        end
     end
 
     ngx.print(appoint)

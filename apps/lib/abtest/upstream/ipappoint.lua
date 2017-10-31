@@ -2,6 +2,7 @@ local _M    = {}
 local mt    = { __index = _M }
 _M._VERSION = "0.1"
 
+local ip_parser = require "apps.lib.ip_parser"
 local tonumber = tonumber
 
 _M.new = function(self,policy)
@@ -14,10 +15,11 @@ local isNULL = function(v)
 end
 
 _M.check = function(self)
-    if type(self.policy) ~= 'table' then
+    local policy = self.policy
+    if type(policy) ~= 'table' then
         return nil
     end
-    for _, v in pairs(self.policy) do
+    for i, v in pairs(policy) do
         if type(v['upstream']) ~= 'table' then
             return nil
         end
@@ -27,6 +29,8 @@ _M.check = function(self)
         if type(v['range']) ~= 'table' then
             return nil
         else
+            v['range']['start'] = ip_parser.ip2long(v['range']['start'])
+            v['range']['end'] = ip_parser.ip2long(v['range']['end'])
             if not tonumber(v['range']['start']) or not tonumber(v['range']['end']) then
                 return nil
             end
@@ -34,8 +38,33 @@ _M.check = function(self)
                 return nil
             end
         end
+        policy[i] = v
     end
-    return true
+    return policy
+end
+
+
+_M.reduction = function(self)
+    local policy = self.policy
+    if type(policy) ~= 'table' then
+        return nil
+    end
+    for i, v in pairs(policy) do
+        if type(v['upstream']) ~= 'table' then
+            return nil
+        end
+        if not v['upstream']['ip'] or not v['upstream']['port'] then
+            return nil
+        end
+        if type(v['range']) ~= 'table' then
+            return nil
+        else
+            v['range']['start'] = ip_parser.long2ip(v['range']['start'])
+            v['range']['end'] = ip_parser.long2ip(v['range']['end'])
+        end
+        policy[i] = v
+    end
+    return policy
 end
 
 

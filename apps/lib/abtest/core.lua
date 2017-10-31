@@ -80,7 +80,7 @@ local function generate_abtest_upstream_id(premature,host)
     else
         ngxshared.abtest:delete('abtest:upstream:' .. host)
     end
-    --ngx_log(ngx.ERR, "generate_abtest_upstream_id")
+    ngx_log(ngx.ERR, "generate_abtest_upstream_id:",host)
 end
 
 
@@ -106,7 +106,7 @@ local function generate_abtest_default_upstream(premature,host,default_upstream_
     else
         c:set('abtest:default:upstream:' .. host,default_upstream_conf)
     end
-    --ngx_log(ngx.ERR, "generate_abtest_default_upstream") 
+    ngx_log(ngx.ERR, "generate_abtest_default_upstream:",host) 
 end
 
 
@@ -130,7 +130,7 @@ local function generate_abtest_appoint(premature,upstream_id)
     else
         c:delete('abtest:upstream:appoint:' .. upstream_id)
     end
-    --ngx_log(ngx.ERR, "generate_abtest_appoint")
+    ngx_log(ngx.ERR, "generate_abtest_appoint:",upstream_id)
 end
 
 
