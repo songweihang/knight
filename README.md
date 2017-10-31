@@ -2,9 +2,13 @@
 knight是基于 [openresty](https://openresty.org) 开发的集群API统计、灰度发布、CC防御模块
 
 1、自定义规则进行API统计(运行次数、成功率、运行时间、流量)
+
 2、支持UID以及IP灰度发布
+
 3、支持简单IP频率限制以及IP封禁
+
 4、所有操作均采用api进行操作，无需重启nginx
+
 5、支持集群化
 
 ### 配置
@@ -35,7 +39,9 @@ knight是基于 [openresty](https://openresty.org) 开发的集群API统计、�
     }
 
 ### 详细说明
-    
+[API统计](https://github.com/songweihang/knight/blob/master/ApiStatis.md)
+[灰度发布](https://github.com/songweihang/ABTest/blob/master/README.md)
+[CC防御模块](https://github.com/songweihang/knight/blob/master/CC.md)
 
 ### License
 
